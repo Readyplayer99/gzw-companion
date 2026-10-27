@@ -1,8 +1,8 @@
-Grey Zone Warfare — Hideout Tracker
+Gray Zone Warfare - Companion App
 
-Track your supplies. Plan your upgrades. Waste less time looting.
+Helps Take your Supplies, Help's plane upgrades and waste less time figuring out what to loot. 
 
-A fan-made companion tracker designed to help Grey Zone Warfare players organize their hideout upgrades and identify exactly which materials they need.
+This is a fan made Companion tracker is designed to help players for GZW with upgrading there hideout and organize their materials.
 
 Current Features:
 
@@ -25,5 +25,7 @@ Why I made it:
 I wanted a simple way to spend less time figuring out what to collect and more time actually playing. Instead of grabbing everything and hoping it's useful, this tracker helps you focus on what matters for your next upgrade.
 
 This is an early version, and I'm continuing to develop and improve it. Feedback, suggestions, and bug reports are welcome.
+ 
+Disclaimer AI was used in the creation of (Gray Zone Warfare - Companion App) I have tested everything my self but being a novice in coding could still have missed thing so please provide feed back. 
 
 Unofficial community-made tool. Not affiliated with or endorsed by MADFINGER Games.
