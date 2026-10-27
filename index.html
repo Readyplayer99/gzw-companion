@@ -1,0 +1,2275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14170f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="GZW Companion">
+<title>GZW Companion</title>
+<style>
+:root { --bg:#14170f; --panel:#1e2318; --panel-2:#283020; --border:#3a4430; --text:#e4e6d9; --muted:#9aa08a; --accent:#a3b85c; --accent-dark:#6f7f37; --gold:#e2b93b; --danger:#c0553f; --warn:#d9a441; --radius:10px; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 15px; -webkit-tap-highlight-color: transparent; }
+body.is-dragging { user-select: none; -webkit-user-select: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--accent); }
+h2, h3, h4 { margin: 0; }
+[hidden] { display: none !important; }
+.app { max-width: 900px; margin: 0 auto; min-height: 100vh; padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+.page { padding: 12px; }
+.topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; padding: 12px 14px; padding-top: calc(12px + env(safe-area-inset-top)); background: var(--panel); border-bottom: 1px solid var(--border); }
+.topbar h1 { font-size: 18px; margin: 0; flex: 1; letter-spacing: .5px; text-transform: uppercase; }
+.back { font-size: 22px; padding: 0 6px; text-decoration: none; color: var(--text); }
+.version { color: var(--muted); font-size: 12px; }
+.subtabs { display: flex; overflow-x: auto; background: var(--panel); border-bottom: 1px solid var(--border); }
+.subtabs a { flex: 1; white-space: nowrap; padding: 11px 12px; text-align: center; text-decoration: none; color: var(--muted); border-bottom: 3px solid transparent; }
+.subtabs a.active { color: var(--text); border-bottom-color: var(--accent); }
+.pill { background: var(--gold); color: #000; border-radius: 99px; padding: 0 6px; font-size: 11px; font-weight: 700; }
+.home { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; padding: 16px; }
+.home-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 22px 10px; color: var(--text); text-decoration: none; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); font-weight: 600; }
+.home-card.soon { opacity: .55; }
+.home-card small { color: var(--muted); font-weight: 400; }
+.home-icon { font-size: 34px; }
+.footnote { grid-column: 1 / -1; color: var(--muted); font-size: 12px; text-align: center; margin: 16px 0 0; }
+.coming-soon { text-align: center; padding: 60px 20px; color: var(--muted); }
+.btn { display: inline-block; padding: 9px 14px; background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--radius); font-weight: 600; text-decoration: none; color: var(--text); }
+.btn.primary { background: var(--accent-dark); border-color: var(--accent); }
+.btn.danger { border-color: var(--danger); color: #f0a898; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.card { display: block; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 10px; color: var(--text); text-decoration: none; }
+.section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 16px 4px 6px; }
+.muted-s { color: var(--muted); font-size: 13px; margin: 4px 0; }
+.bar { display: block; height: 6px; background: var(--panel-2); border-radius: 99px; overflow: hidden; }
+.bar.big { height: 10px; margin: 8px 0; }
+.bar > span { display: block; height: 100%; background: var(--accent); transition: width .2s; }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.chip { white-space: nowrap; padding: 6px 12px; border-radius: 999px; background: var(--panel); border: 1px solid var(--border); color: var(--muted); }
+.chip.active { background: var(--accent-dark); color: var(--text); border-color: var(--accent); }
+.hint { background: var(--panel-2); border-radius: var(--radius); padding: 10px 12px; font-size: 14px; margin: 8px 0; }
+.warnbox { border: 1px solid var(--warn); color: #f2d28f; background: rgba(217,164,65,.08); border-radius: 8px; padding: 8px 10px; font-size: 13px; margin: 8px 0; }
+.empty { text-align: center; color: var(--muted); padding: 30px; }
+select { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; }
+.toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
+.toolbar-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.toolbar-row.small { font-size: 13px; color: var(--muted); gap: 14px; }
+.search { flex: 1; min-width: 160px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); font-size: 16px; }
+.check { display: flex; align-items: center; gap: 6px; }
+.menu { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; background: var(--panel); border-radius: var(--radius); }
+.overall { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.row { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; }
+.row.done { border-color: var(--accent-dark); }
+.row.done .hn::after { content: " ✅"; }
+.row.dragging { border-color: var(--gold); box-shadow: 0 6px 20px rgba(0,0,0,.5); background: var(--panel-2); }
+.row-main { display: flex; align-items: center; gap: 8px; padding: 8px; }
+.handle { touch-action: none; background: none; border: none; color: var(--muted); font-size: 24px; padding: 6px 4px; cursor: grab; }
+.icon-wrap { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
+.icon { width: 44px; height: 44px; border-radius: 8px; object-fit: contain; background: var(--panel-2); display: block; }
+.icon-wrap .placeholder { display: none; }
+.icon-wrap.noimg img { display: none; }
+.icon-wrap.noimg .placeholder { display: grid; place-items: center; font-weight: 700; font-size: 14px; color: var(--muted); }
+.name { flex: 1; min-width: 0; text-align: left; background: none; border: none; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.name-text { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.need { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; }
+.need .bar { max-width: 180px; }
+.tag { margin-left: 6px; font-size: 10px; padding: 1px 6px; border-radius: 99px; background: var(--panel-2); color: var(--gold); vertical-align: middle; font-weight: 600; }
+.star { background: none; border: none; font-size: 24px; color: var(--muted); padding: 4px; }
+.star.on { color: var(--gold); }
+.stepper { display: flex; align-items: center; gap: 4px; }
+.step { width: 40px; height: 40px; border-radius: 8px; font-size: 22px; line-height: 1; background: var(--panel-2); border: 1px solid var(--border); touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.step:active { background: var(--accent-dark); }
+.count { width: 56px; height: 40px; text-align: center; font-weight: 700; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 16px; }
+.count.money { width: 96px; }
+.details { display: flex; padding: 4px 14px 12px; font-size: 13px; color: var(--muted); flex-direction: column; gap: 6px; }
+.details b { color: var(--text); }
+.details ul { margin: 4px 0 0; padding-left: 18px; }
+.banner { display: flex; gap: 10px; align-items: flex-start; background: var(--panel-2); border: 1px solid var(--accent-dark); border-radius: var(--radius); padding: 10px 12px; font-size: 14px; margin-bottom: 10px; }
+.banner div { flex: 1; }
+.x { background: none; border: none; color: var(--muted); font-size: 18px; padding: 0 4px; }
+.summary-row { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
+.stat { background: var(--panel-2); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--muted); }
+.stat b { font-size: 17px; color: var(--text); }
+.stat.bad b { color: #f0a898; }
+.ready-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ready-links a { font-size: 13px; padding: 4px 10px; border-radius: 99px; background: rgba(163,184,92,.15); text-decoration: none; }
+.pin-line { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid var(--border); text-decoration: none; color: var(--text); font-size: 14px; }
+.room-card .rc-top { display: flex; align-items: center; gap: 10px; }
+.room-card .rc-icon { font-size: 26px; }
+.room-card .rc-name { flex: 1; font-weight: 700; }
+.rc-sub { font-size: 13px; color: var(--muted); }
+.cap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; }
+.cap { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px; display: flex; justify-content: space-between; gap: 6px; font-size: 13px; }
+.cap b { color: var(--accent); }
+.crumb { display: inline-block; margin: 2px 0 10px; text-decoration: none; font-weight: 600; }
+.station-card .sc-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.sc-name { font-weight: 700; }
+.sc-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.station-card.ready, .station-card.craftable { border-color: var(--accent); }
+.badge { font-size: 12px; padding: 3px 8px; border-radius: 99px; white-space: nowrap; background: var(--panel-2); }
+.badge.ready, .badge.craftable { background: rgba(163,184,92,.2); color: #cfe08f; }
+.badge.missing { background: rgba(226,185,59,.15); color: #f2d28f; }
+.badge.locked { background: rgba(192,85,63,.18); color: #f0a898; }
+.badge.maxed { background: rgba(120,160,220,.15); color: #b8cdf0; }
+.badge.needs { background: rgba(190,140,220,.15); color: #d9bdf0; }
+.badge.incomplete { background: var(--panel-2); color: var(--muted); }
+.dots { display: flex; gap: 4px; margin-top: 6px; }
+.dot { width: 22px; height: 6px; border-radius: 99px; background: var(--panel-2); }
+.dot.on { background: var(--accent); }
+.sd-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.pin.on { border-color: var(--gold); color: var(--gold); }
+.req { list-style: none; padding: 0; margin: 8px 0; font-size: 14px; display: flex; flex-direction: column; gap: 6px; }
+.ways { font-size: 13px; color: var(--muted); margin: 2px 0 6px 22px; padding-left: 14px; list-style: disc; }
+.effects { font-size: 14px; display: flex; flex-direction: column; gap: 3px; margin: 8px 0; }
+.over { color: #f0a898; }
+.mat-list { margin-top: 6px; }
+#build-area { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.build-btn { width: 100%; padding: 14px; font-size: 16px; }
+.build-note { font-size: 13px; color: #f2d28f; margin: 0; }
+.build-warn { font-size: 13px; color: #f0a898; margin: 0; }
+.inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.inline select { flex: 1; min-width: 0; padding: 9px; }
+details.card summary { cursor: pointer; font-weight: 700; }
+.lvl { border-top: 1px solid var(--border); padding: 10px 0; font-size: 13px; }
+.lvl.next { border-left: 3px solid var(--accent); padding-left: 8px; }
+.lvl-head { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.lvl-req { margin: 4px 0; }
+.lvl-meta { color: var(--muted); }
+.job { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--border); }
+.job-main { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 50; display: flex; align-items: center; gap: 16px; padding: 12px 16px; background: #0b0d08; border: 1px solid var(--accent-dark); border-radius: var(--radius); box-shadow: 0 6px 24px rgba(0,0,0,.6); max-width: calc(100% - 24px); }
+.toast button { background: none; border: none; color: var(--accent); font-weight: 700; text-transform: uppercase; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,.65); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+.modal { width: 100%; max-width: 480px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; max-height: calc(100vh - 32px); overflow-y: auto; }
+.modal form, .modal .modal-body { display: flex; flex-direction: column; gap: 12px; }
+.modal label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.modal label.check { flex-direction: row; color: var(--text); font-size: 14px; }
+.modal input:not([type=checkbox]), .modal textarea, .modal select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 9px; font-size: 16px; width: 100%; }
+.modal-msg { margin: 0; line-height: 1.45; }
+.modal-buttons { display: flex; gap: 8px; align-items: center; }
+.error { color: #f0a898; margin: -6px 0 0; font-size: 13px; }
+.error:empty { display: none; }
+.two { display: flex; gap: 8px; }
+.two > label { flex: 1; min-width: 0; }
+.two > label.narrow { flex: 0 0 90px; }
+.ing-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.ing-row .ing-item { flex: 1; min-width: 0; }
+.modal .ing-row .ing-qty { width: 64px; flex: 0 0 64px; }
+.q-arrows { display: flex; flex-direction: column; gap: 4px; }
+.q-arrows .btn { padding: 2px 10px; font-size: 12px; line-height: 1.4; }
+.job .btn { white-space: nowrap; }
+.station-card .inline { margin-top: 8px; }
+@media (max-width: 480px) {
+  .row-main { flex-wrap: wrap; }
+  .name { flex-basis: calc(100% - 130px); }
+  .stepper { width: 100%; justify-content: flex-end; }
+  .mat .stepper, .row .stepper { width: 100%; }
+  .step { width: 46px; height: 46px; }
+}
+</style>
+</head>
+<body>
+<div id="app" class="app"></div>
+<div id="toast-root"></div>
+<div id="modal-root"></div>
+<input type="file" id="import-file" accept=".json,application/json" hidden>
+<script>
+"use strict";
+// =============================================================
+// GAME DATA – edit this part when a game patch changes things
+// =============================================================
+const APP_VERSION = "0.1.4";
+const SAVE_VERSION = 2;
+const STORAGE_KEY = "gzw-companion";
+const DATA_SOURCE = "Gray Zone Warfare 0.5 (Rogue Ops) – community data, unconfirmed – Oct 2026";
+const slug = (name) => String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+const IMG = "https://static.wikia.nocookie.net/gray-zone-warfare/images/";
+
+const CATEGORIES = [
+  { id: "building", label: "Building" },
+  { id: "production", label: "Production" },
+  { id: "crafting", label: "Crafting" },
+  { id: "crafted", label: "Crafted" },
+  { id: "other", label: "Other" },
+];
+
+// [ name, category, { optional: image, info, step, money } ]
+const RAW_ITEMS = [
+  ["US Dollars", "building", { step: 1000, money: true, info: "Cash cost for Level 2–3 builds" }],
+  ["Analog Indicator", "building", { image: IMG + "0/03/Analog_Indicator_inspect.png/revision/latest", info: "1x1 · 0.5 kg · sells $15 · Tool box" }],
+  ["Burner Head", "building", { image: IMG + "5/5f/Burner_Head_inspect.png/revision/latest", info: "1x1 · 0.25 kg · sells $15 · Loose loot" }],
+  ["Chemicals", "building"],
+  ["CNC Drill Bits", "building", { image: IMG + "2/22/CNC_Drill_Bits_inspect.png/revision/latest", info: "1x1 · 0.42 kg · sells $60 · Loose loot" }],
+  ["Complex Glass Electrode", "building", { info: "1x2 · 0.45 kg · sells $150 · Loose loot" }],
+  ["Construction Material", "building", { image: IMG + "3/38/Icon_Construction_Mat.png/revision/latest", info: "3x3 · 10 kg · sells $15 · Building Materials Crate, loose loot" }],
+  ["Copper", "building", { image: IMG + "d/db/Icon_Copper.png/revision/latest", info: "3x3 · 3 kg · sells $30 · Loose loot" }],
+  ["Crystal Prism", "building", { image: IMG + "7/7a/Crystal_Prism_inspect.png/revision/latest", info: "1x1 · 0.035 kg · sells $150 · Loose loot" }],
+  ["Dynamo", "building", { info: "2x2 · 3 kg · sells $150 · Loose loot" }],
+  ["Fabrics", "building"], ["Fine Metal Mesh", "building"], ["Glass", "building"], ["Graphics Card", "building"],
+  ["HEPA Filter", "building"], ["Laboratory Flask", "building"], ["Laser Tube", "building"], ["Mechanical Parts", "building"],
+  ["Mechanical Pipette", "building"], ["Microscope", "building"], ["Motherboard", "building"],
+  ["Motor Oil", "building", { info: "2x2 · 4.3 kg · sells $15 · Existed before 0.5" }],
+  ["Multimeter", "building"], ["Oscilloscope", "building"], ["PC Fan", "building"], ["Plastics", "building"],
+  ["Plumbing Parts", "building"], ["Power Supply", "building"], ["RAM", "building"], ["Refrigerant", "building"],
+  ["Server CPU", "building"], ["Signal Generator", "building"], ["Silicone Sealant", "building"], ["Soldering Iron", "building"],
+  ["Stainless Steel Sheet", "building"],
+  ["Steel", "building", { info: "4x2 · 4.4 kg · sells $30 · Building Materials Crate, loose loot" }],
+  ["Tool Set", "building", { info: "2x2 · 1 kg · sells $142 · Existed before 0.5" }],
+  ["Tooling Coolant", "building"], ["Vapor Lamp", "building"], ["Water Pump", "building"], ["Wood", "building"], ["Zinc Electrode", "building"],
+  // Production (Laboratory)
+  ["Ammonium Chloride", "production"], ["Garden Lime", "production"],
+  ["Opium Gum", "production", { info: "2x2 · 2 kg · sells $150 · Loose loot" }],
+  ["Purified Water", "production"],
+  // Crafting materials
+  ["Circuit Board", "crafting"], ["Civilian Software", "crafting"], ["Military Software", "crafting"], ["CPU", "crafting"],
+  ["CPU Card", "crafting", { info: "Disassemble: Artillery Ballistic Computer (unconfirmed)" }],
+  ["Electrical Parts", "crafting"],
+  ["Avionics Processor Board", "crafting", { info: "Disassemble: Baget-53-31 Onboard Computer" }],
+  ["Digital Synthesis Engine", "crafting", { info: "Disassemble: Counter IED/Jammer Unit" }],
+  ["FPGA Module", "crafting", { info: "Disassemble: Manpack Tactical Radio" }],
+  ["High-Speed Digital Processor Board", "crafting", { info: "Disassemble: Radar Signal Processor" }],
+  ["Multi-Bus Converter", "crafting", { info: "Disassemble: UNLRA Field Terminal" }],
+  ["Oven-Controlled Crystal Oscillator", "crafting", { info: "Disassemble: Portable SATCOM Terminal" }],
+  ["Server RAM Module", "crafting", { info: "Disassemble: ST1122 Storage Computer" }],
+  ["Spoofing ASIC Module", "crafting", { info: "Disassemble: IMSI Catcher" }],
+  ["Bone Density Stimulant", "crafting"], ["Empty Auto Injector", "crafting"], ["Glucose", "crafting"],
+  ["Human Growth Hormone", "crafting"], ["Iron Sucrose", "crafting"], ["Saline", "crafting"], ["Theophylline", "crafting"],
+  ["Vitamin B12", "crafting"], ["Methylene Blue", "crafting"], ["Aniline", "crafting"], ["Bromopyridine", "crafting"],
+  ["Methanol", "crafting"], ["High-Quality Morphine Base", "crafting"],
+  // Crafted / products (what the Craft button makes)
+  ["Basic Hacking Tool", "crafted", { info: "Tier 1 · opens Level 1 keypad doors · 20 s hack" }],
+  ["Advanced Hacking Tool", "crafted", { info: "Tier 2 · opens Level 2 keypad doors · 15 s hack" }],
+  ["Superior Hacking Tool", "crafted", { info: "Tier 3 · opens all keypad doors · 10 s hack" }],
+  ["Tracking Tag", "crafted", { info: "No longer sold by vendors in 0.5" }],
+  ["Methylphenidate", "crafted", { info: "Stim · removed from vendors in 0.5" }],
+  ["EPO", "crafted", { info: "Stim · removed from vendors in 0.5" }],
+  ["ORI-12", "crafted", { info: "Stim · removed from vendors in 0.5" }],
+  ["HpR 3-S", "crafted", { info: "Stim · removed from vendors in 0.5" }],
+];
+const BUILT_IN_ITEMS = RAW_ITEMS.map(([name, category, extra = {}]) => ({ id: slug(name), name, category, step: 1, image: "", info: "", ...extra }));
+const BUILT_IN_BY_ID = Object.fromEntries(BUILT_IN_ITEMS.map((i) => [i.id, i]));
+
+// ---------------- ROOMS, CAPABILITIES ----------------
+const ROOMS = [
+  { id: "utility", name: "Utility Room", icon: "⚡" },
+  { id: "laboratory", name: "Laboratory", icon: "🧪" },
+  { id: "workshop", name: "Electronics Workshop", icon: "🔧" },
+];
+const ROOM_BY_ID = Object.fromEntries(ROOMS.map((r) => [r.id, r]));
+const CAPS = [
+  { id: "heat", name: "Heat Control" },
+  { id: "extraction", name: "Extraction & Reaction" },
+  { id: "filtration", name: "Filtration & Processing" },
+  { id: "analysis", name: "Analysis & Precision" },
+  { id: "safety", name: "Safety" },
+  { id: "storage", name: "Storage Capacity" },
+  { id: "compute", name: "Compute Capacity" },
+  { id: "electronics", name: "Electronics" },
+  { id: "mech", name: "Mech. Engineering" },
+  { id: "rf", name: "Sensor & RF" },
+];
+const CAP_BY_ID = Object.fromEntries(CAPS.map((c) => [c.id, c]));
+
+// ---------------- STATIONS ----------------
+// L(levelName, materials, { gives, needs, power (kW used), produces (kW made), warn })
+const L = (name, req, o = {}) => ({ name, req, gives: o.gives || {}, needs: o.needs || {}, power: o.power || 0, produces: o.produces || 0, warn: o.warn || "" });
+
+const RAW_STATIONS = [
+  ["generator", "Generator", "utility", [
+    L("Two-Stroke Engine", { Steel: 1, "Mechanical Parts": 1, "Motor Oil": 1, Dynamo: 1 }, { produces: 9 }),
+    L("Diesel Generator", { Steel: 2, "Mechanical Parts": 2, "Electrical Parts": 2, "Plumbing Parts": 2, "Motor Oil": 1, Dynamo: 1 }, { produces: 18, warn: "Fandom lists 1 Plumbing Parts and 1 Electrical Parts (not 2 each)." }),
+  ]],
+  ["heat-source", "Heat Source", "laboratory", [
+    L("Open Fire Pit", { Steel: 3, "Construction Material": 2, Wood: 1 }, { gives: { heat: 1 } }),
+    L("Single Burner", { Steel: 4, "Construction Material": 3, "Plumbing Parts": 2, "Burner Head": 1 }, { gives: { heat: 1 }, needs: { safety: 1 } }),
+    L("Multiple Burner Array", { Steel: 10, "Construction Material": 5, "Plumbing Parts": 5, "Mechanical Parts": 2, "Burner Head": 2, "US Dollars": 40000 }, { gives: { heat: 2 } }),
+  ]],
+  ["extraction-vessel", "Extraction Vessel", "laboratory", [
+    L("Oil Tank", { Steel: 1, Copper: 1, "Plumbing Parts": 1, "Analog Indicator": 1 }, { gives: { extraction: 2 }, needs: { heat: 1 } }),
+    L("Copper Distillation Still", { Copper: 5, "Plumbing Parts": 1, "Analog Indicator": 1, "Water Pump": 1 }, { gives: { extraction: 3 }, needs: { heat: 2 } }),
+  ]],
+  ["reaction-vessel", "Reaction Vessel", "laboratory", [
+    L("Plastic Drums", { Plastics: 2, "Construction Material": 1, "Silicone Sealant": 1 }, { gives: { extraction: 1 } }),
+    L("Galvanized Tank", { Steel: 4, Chemicals: 2, "Zinc Electrode": 1 }, { gives: { extraction: 1 } }),
+    L("Stainless Steel Tank", { Steel: 12, "Mechanical Parts": 6, "Stainless Steel Sheet": 3, "US Dollars": 45000 }, { gives: { extraction: 2 } }),
+  ]],
+  ["filtration", "Filtration", "laboratory", [
+    L("Cloth Sheet Filter", { Fabrics: 4, Wood: 2 }, { gives: { filtration: 1 }, needs: { extraction: 1 } }),
+    L("Metal Sieve", { "Fine Metal Mesh": 3, Steel: 3 }, { gives: { filtration: 1 } }),
+  ]],
+  ["analysis", "Analysis", "laboratory", [
+    L("PH Meter", { Plastics: 2, "Electrical Parts": 1, "Circuit Board": 1, "Complex Glass Electrode": 1 }, { gives: { analysis: 3 }, needs: { analysis: 1 }, power: 1, warn: "Fandom does not list the Complex Glass Electrode." }),
+    L("Spectrometer", { "Electrical Parts": 4, "Circuit Board": 3, Plastics: 2, "Mechanical Parts": 2, "Crystal Prism": 1, "Vapor Lamp": 1, "US Dollars": 35000 }, { gives: { analysis: 2 }, needs: { analysis: 5 }, power: 1 }),
+  ]],
+  ["glassware", "Glassware", "laboratory", [
+    L("Basic Glass Set", { Glass: 1, Plastics: 1, "Laboratory Flask": 1 }, { gives: { analysis: 1 } }),
+    L("Laboratory Glass Set", { Glass: 2, Plastics: 1, "Laboratory Flask": 1, "Mechanical Pipette": 1 }, { gives: { analysis: 2 } }),
+  ]],
+  ["lab-storage", "Storage (Lab)", "laboratory", [
+    L("Rusty Old Fridge", { Steel: 1, "Electrical Parts": 1, "Plumbing Parts": 1, Refrigerant: 1 }, { gives: { storage: 1 }, power: 1 }),
+    L("Beverage Cooler", { Glass: 3, Steel: 3, "Plumbing Parts": 2, "Electrical Parts": 1, Refrigerant: 1 }, { gives: { storage: 3 }, power: 1 }),
+    L("Laboratory Fridge", { Steel: 6, Glass: 5, "Circuit Board": 2, "Electrical Parts": 2, "Plumbing Parts": 2, Refrigerant: 2, "US Dollars": 45000 }, { gives: { storage: 2 }, power: 1 }),
+  ]],
+  ["ventilation", "Ventilation", "laboratory", [
+    L("Fan", { "Electrical Parts": 2, "PC Fan": 2, Plastics: 2 }, { gives: { safety: 1 }, power: 1, warn: "Fandom lists 2 Mechanical Parts instead of 2 Electrical Parts." }),
+    L("Ventilation", { Steel: 10, "Electrical Parts": 5, "Plumbing Parts": 5, "PC Fan": 3, "HEPA Filter": 1, "US Dollars": 35000 }, { gives: { safety: 2 }, power: 2 }),
+  ]],
+  ["hardware", "Hardware", "workshop", [
+    L("Scavenged PC Rig", { Motherboard: 1, "Graphics Card": 1, CPU: 1, "PC Fan": 1, RAM: 1, "Power Supply": 1 }, { gives: { compute: 1 }, power: 1 }),
+    L("High-End Workstation", { RAM: 3, "Plumbing Parts": 2, Motherboard: 1, "Graphics Card": 1, CPU: 1, "Power Supply": 1 }, { gives: { compute: 2 }, power: 1, warn: "Fandom lists 1 RAM (not 3)." }),
+    L("Dedicated Server Rack", { "Electrical Parts": 5, RAM: 4, Motherboard: 1, "Power Supply": 1, "Server CPU": 1, "US Dollars": 45000 }, { gives: { compute: 2 }, power: 1 }),
+  ]],
+  ["software", "Software", "workshop", [
+    L("Leaked Military Firmware Bypass", { "Civilian Software": 3, "Military Software": 1 }, { gives: { compute: 2 }, needs: { compute: 1 } }),
+    L("GPU-Accelerated Brute-Force Matrix", { "Civilian Software": 6, "Military Software": 2, "Graphics Card": 1 }, { gives: { compute: 2 }, needs: { compute: 5 } }),
+  ]],
+  ["micro-electronics", "Micro Electronics", "workshop", [
+    L("Basic Electronics Bench", { "Soldering Iron": 1, Multimeter: 1, "Tool Set": 1, "Power Supply": 1, Wood: 1 }, { gives: { electronics: 1 } }),
+    L("Advanced Technical Workbench", { "Electrical Parts": 4, "Soldering Iron": 2, Multimeter: 1, Oscilloscope: 1, "Power Supply": 1 }, { gives: { electronics: 2 }, power: 2 }),
+    L("Microelectronics Station", { "Electrical Parts": 5, "Circuit Board": 2, Microscope: 1, Multimeter: 1, Oscilloscope: 1, "Power Supply": 1, "US Dollars": 35000 }, { gives: { electronics: 3 }, power: 1, warn: "Fandom does not list the Oscilloscope." }),
+  ]],
+  ["machine-tools", "Machine Tools", "workshop", [
+    L("Manual Tooling Rig", { Wood: 1, Steel: 1, "Tool Set": 1 }, { gives: { mech: 1 } }),
+    L("CNC System", { Steel: 3, "Mechanical Parts": 2, "Electrical Parts": 1, "CNC Drill Bits": 1, "Tooling Coolant": 1 }, { gives: { mech: 2 }, power: 2, warn: "Fandom does not list the 2 Mechanical Parts." }),
+  ]],
+  ["rf-sensors", "RF Sensors", "workshop", [
+    L("Signal Diagnostics Bench", { "Electrical Parts": 1, "Signal Generator": 1, "Soldering Iron": 1, Steel: 1, Wood: 1 }, { gives: { rf: 1 }, power: 1 }),
+    L("Electro-Optics & Radar Suite", { Steel: 6, "Electrical Parts": 4, "Mechanical Parts": 2, "Laser Tube": 1, Oscilloscope: 1, "Signal Generator": 1, "US Dollars": 30000 }, { gives: { rf: 2 }, power: 1 }),
+  ]],
+  ["workshop-storage", "Storage (Workshop)", "workshop", [
+    L("Salvaged Wooden Crate", { Wood: 1, "Mechanical Parts": 1 }, { gives: { storage: 1 } }),
+    L("Heavy-Duty Steel Locker", { Steel: 9, "Mechanical Parts": 3 }, { gives: { storage: 3 } }),
+    L("Modified Server Cabinet", { Steel: 12, "Stainless Steel Sheet": 4, "Mechanical Parts": 6, "US Dollars": 30000 }, { gives: { storage: 2 }, warn: "Fandom lists $45,000 (not $30,000)." }),
+  ]],
+];
+const STATIONS = RAW_STATIONS.map(([id, name, room, levels]) => ({
+  id, name, room,
+  levels: levels.map((lv) => ({
+    ...lv,
+    req: Object.fromEntries(Object.entries(lv.req).map(([n, q]) => {
+      if (!BUILT_IN_BY_ID[slug(n)]) console.warn("Unknown item in " + name + ": " + n);
+      return [slug(n), q];
+    })),
+  })),
+}));
+const STATION_BY_ID = Object.fromEntries(STATIONS.map((s) => [s.id, s]));
+const TOTAL_LEVELS = STATIONS.reduce((n, s) => n + s.levels.length, 0);
+
+// ---------------- CRAFTING RECIPES ----------------
+// ingredients: [ name, amount, amountUnconfirmed ]
+// station: [ stationId, level ] or null (unknown) · cap: [ capId, min ] or null
+// time: minutes (0 = unknown, crafts instantly in the app) · power: kW
+const RAW_RECIPES = [
+  { id: "basic-hacking-tool", name: "Basic Hacking Tool", room: "workshop", output: ["Basic Hacking Tool", 1],
+    ingredients: [["Multi-Bus Converter", 1, true], ["CPU Card", 1, true], ["Spoofing ASIC Module", 1, true]],
+    station: ["micro-electronics", 1], stationGuess: true, needsRecipe: true, task: "Artisan task (name not confirmed)",
+    notes: "Tier 1. Opens Level 1 keypad doors, 20 s hack. Ingredients are confirmed; amounts and station level are guesses.", source: "tposegaming.com" },
+  { id: "advanced-hacking-tool", name: "Advanced Hacking Tool", room: "workshop", output: ["Advanced Hacking Tool", 1],
+    ingredients: [["FPGA Module", 1, true], ["Avionics Processor Board", 1, true], ["Server RAM Module", 1, true]],
+    station: ["micro-electronics", 2], stationGuess: true, needsRecipe: true, task: "Artisan task (name not confirmed)",
+    notes: "Tier 2. Opens Level 2 keypad doors, 15 s hack. Ingredients are confirmed; amounts and station level are guesses.", source: "tposegaming.com" },
+  { id: "superior-hacking-tool", name: "Superior Hacking Tool", room: "workshop", output: ["Superior Hacking Tool", 1],
+    ingredients: [["High-Speed Digital Processor Board", 1, true], ["Oven-Controlled Crystal Oscillator", 1, true], ["Digital Synthesis Engine", 1, true]],
+    station: ["micro-electronics", 3], stationGuess: true, needsRecipe: true, task: "Artisan task (name not confirmed)",
+    notes: "Tier 3. Opens all keypad doors, 10 s hack. Ingredients are confirmed; amounts and station level are guesses.", source: "tposegaming.com" },
+  { id: "tracking-tag", name: "Tracking Tag", room: "workshop", output: ["Tracking Tag", 1], ingredients: [],
+    station: null, needsRecipe: true, task: "",
+    notes: "Vendors no longer sell tracking tags in 0.5, so crafting is the only source. Ingredients not published yet. Tap Edit to fill them in.", source: "grayzonewarfaregame.wiki" },
+  ...["Methylphenidate", "EPO", "ORI-12", "HpR 3-S"].map((n) => ({
+    id: slug(n), name: n, room: "laboratory", output: [n, 1], ingredients: [], station: null, needsRecipe: true, task: "",
+    notes: "Stims were removed from vendors in 0.5. Ingredients not published yet. Likely candidates: Empty Auto Injector, Glucose, Saline, Vitamin B12, Theophylline. Tap Edit to fill them in.",
+    source: "MADFINGER changelog" })),
+];
+function buildRecipe(r) {
+  const chk = (n) => { if (!BUILT_IN_BY_ID[slug(n)]) console.warn("Unknown item in recipe " + r.name + ": " + n); return slug(n); };
+  return {
+    id: r.id, name: r.name, room: r.room,
+    output: { item: chk(r.output[0]), qty: r.output[1] },
+    ingredients: r.ingredients.map(([n, q, u]) => ({ item: chk(n), qty: q, unsure: !!u })),
+    station: r.station ? { id: r.station[0], level: r.station[1] } : null,
+    stationGuess: !!r.stationGuess,
+    cap: r.cap ? { id: r.cap[0], min: r.cap[1] } : null,
+    needsRecipe: !!r.needsRecipe, task: r.task || "", power: r.power || 0, time: r.time || 0,
+    notes: r.notes || "", source: r.source || "",
+  };
+}
+const BUILT_IN_RECIPES = RAW_RECIPES.map(buildRecipe);
+const BUILT_IN_RECIPE_BY_ID = Object.fromEntries(BUILT_IN_RECIPES.map((r) => [r.id, r]));
+
+// =============================================================
+// HELPERS
+// =============================================================
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+const int = (v) => { const n = Math.floor(Number(v)); return Number.isFinite(n) ? n : 0; };
+const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
+const arr = (v) => (Array.isArray(v) ? v : []);
+function fmtDur(ms) {
+  if (ms <= 0) return "Ready";
+  const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return h ? h + "h " + m + "m" : m ? m + "m " + sec + "s" : sec + "s";
+}
+function fmtMinutes(min) {
+  if (!min) return "unknown";
+  const h = Math.floor(min / 60), m = min % 60;
+  return ((h ? h + "h " : "") + (m ? m + "m" : "")).trim();
+}
+
+// Typo-friendly search: "stl" and "steal" both find Steel
+function lev(a, b) {
+  const d = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = d[0]; d[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = d[j];
+      d[j] = Math.min(d[j] + 1, d[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = tmp;
+    }
+  }
+  return d[b.length];
+}
+function fuzzy(query, name) {
+  const q = String(query).toLowerCase().trim();
+  if (!q) return true;
+  const n = String(name).toLowerCase();
+  if (n.includes(q)) return true;
+  const qn = q.replace(/[^a-z0-9]/g, ""), nn = n.replace(/[^a-z0-9]/g, "");
+  if (!qn) return true;
+  if (nn.includes(qn)) return true;
+  const words = n.split(/[^a-z0-9]+/).filter(Boolean);
+  if (qn.length >= 2 && words.some((w) => w[0] === qn[0])) {
+    let i = 0;
+    for (const c of nn) if (c === qn[i]) i++;
+    if (i === qn.length && qn.length <= 4) return true;
+  }
+  if (qn.length >= 3) {
+    const max = qn.length >= 6 ? 2 : 1;
+    if (words.some((w) => lev(qn, w.slice(0, qn.length)) <= max || lev(qn, w) <= max)) return true;
+  }
+  return false;
+}
+
+// =============================================================
+// SAVING & BACKUPS – everything is stored on this device only
+// =============================================================
+let storageOK = true;
+function defaultState() {
+  return {
+    saveVersion: SAVE_VERSION,
+    counts: {}, favorites: [], order: [], customItems: [],
+    stationLevels: {}, pins: [],
+    customRecipes: [], recipeOverrides: {}, recipeFlags: {}, recipePins: {}, jobs: [],
+    prefs: { needMode: "max", sort: "custom", category: "all", neededOnly: false, hideBanner: false,
+      roomFilter: "all", craftRoom: "all", craftStatus: "all", hideCraftNote: false },
+  };
+}
+function cleanItem(i) {
+  if (!isObj(i) || !i.id || !i.name) return null;
+  return { id: String(i.id), name: String(i.name).slice(0, 60), category: CATEGORIES.some((c) => c.id === i.category) ? i.category : "other",
+    image: String(i.image || ""), info: String(i.info || "").slice(0, 300), step: Math.max(1, int(i.step) || 1), custom: true };
+}
+function cleanRecipe(r) {
+  if (!isObj(r) || !r.id || !r.name) return null;
+  const st = isObj(r.station) && STATION_BY_ID[r.station.id] ? STATION_BY_ID[r.station.id] : null;
+  return {
+    id: String(r.id), name: String(r.name).slice(0, 80),
+    room: ROOM_BY_ID[r.room] ? r.room : "workshop",
+    output: isObj(r.output) && r.output.item ? { item: String(r.output.item), qty: Math.max(1, int(r.output.qty) || 1) } : null,
+    ingredients: arr(r.ingredients).filter((x) => isObj(x) && x.item).map((x) => ({ item: String(x.item), qty: Math.max(1, int(x.qty) || 1), unsure: !!x.unsure })),
+    station: st ? { id: st.id, level: clamp(int(r.station.level) || 1, 1, st.levels.length) } : null,
+    stationGuess: !!r.stationGuess,
+    cap: isObj(r.cap) && CAP_BY_ID[r.cap.id] ? { id: r.cap.id, min: Math.max(1, int(r.cap.min) || 1) } : null,
+    needsRecipe: !!r.needsRecipe, task: String(r.task || "").slice(0, 120),
+    power: Math.max(0, Number(r.power) || 0), time: Math.max(0, Math.round(Number(r.time) || 0)),
+    notes: String(r.notes || "").slice(0, 600), source: String(r.source || "").slice(0, 120),
+  };
+}
+// Makes sure saved data is valid and adds any new items from the game data
+function normalize(raw) {
+  const r = isObj(raw) ? raw : {};
+  const s = defaultState();
+  s.customItems = arr(r.customItems).map(cleanItem).filter((i) => i && !BUILT_IN_BY_ID[i.id]);
+  const ids = [...BUILT_IN_ITEMS.map((i) => i.id), ...s.customItems.map((i) => i.id)];
+  const valid = new Set(ids);
+  for (const [k, v] of Object.entries(isObj(r.counts) ? r.counts : {})) { const n = Math.max(0, int(v)); if (n && valid.has(k)) s.counts[k] = n; }
+  s.favorites = [...new Set(arr(r.favorites).filter((id) => valid.has(id)))];
+  const saved = [...new Set(arr(r.order).filter((id) => valid.has(id)))];
+  const inSaved = new Set(saved);
+  s.order = [...saved, ...ids.filter((id) => !inSaved.has(id))];
+  const lv = isObj(r.stationLevels) ? r.stationLevels : {};
+  for (const st of STATIONS) { const n = clamp(int(lv[st.id]), 0, st.levels.length); if (n) s.stationLevels[st.id] = n; }
+  s.pins = [...new Set(arr(r.pins || r.pinned || r.pinnedStations).filter((id) => STATION_BY_ID[id]))];
+  s.customRecipes = arr(r.customRecipes).map(cleanRecipe).filter((x) => x && !BUILT_IN_RECIPE_BY_ID[x.id]);
+  for (const [id, rec] of Object.entries(isObj(r.recipeOverrides) ? r.recipeOverrides : {})) {
+    if (!BUILT_IN_RECIPE_BY_ID[id]) continue;
+    const c = cleanRecipe({ ...rec, id }); if (c) s.recipeOverrides[id] = c;
+  }
+  const recipeIds = new Set([...BUILT_IN_RECIPES.map((x) => x.id), ...s.customRecipes.map((x) => x.id)]);
+  for (const [id, f] of Object.entries(isObj(r.recipeFlags) ? r.recipeFlags : {})) {
+    if (recipeIds.has(id) && isObj(f)) s.recipeFlags[id] = { found: !!f.found, task: !!f.task };
+  }
+  for (const [id, q] of Object.entries(isObj(r.recipePins) ? r.recipePins : {})) {
+    const n = clamp(int(q), 0, 99); if (n && recipeIds.has(id)) s.recipePins[id] = n;
+  }
+  s.jobs = arr(r.jobs).filter((j) => isObj(j) && j.id && isObj(j.output) && Number.isFinite(Number(j.end))).map((j) => ({
+    id: String(j.id), recipeId: String(j.recipeId || ""), name: String(j.name || "Craft"), room: String(j.room || ""),
+    output: { item: String(j.output.item), qty: Math.max(1, int(j.output.qty) || 1) },
+    used: arr(j.used).filter((x) => isObj(x) && x.item).map((x) => ({ item: String(x.item), qty: Math.max(0, int(x.qty)) })),
+    start: Number(j.start) || Date.now(), end: Number(j.end),
+  }));
+  const p = isObj(r.prefs) ? r.prefs : {};
+  s.prefs = { ...s.prefs, ...p };
+  if (!["next", "max", "pinned"].includes(s.prefs.needMode)) s.prefs.needMode = "max";
+  if (!["custom", "az", "needed", "category"].includes(s.prefs.sort)) s.prefs.sort = "custom";
+  s.prefs.neededOnly = !!s.prefs.neededOnly; s.prefs.hideBanner = !!s.prefs.hideBanner; s.prefs.hideCraftNote = !!s.prefs.hideCraftNote;
+  return s;
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return normalize(raw ? JSON.parse(raw) : null);
+  } catch (e) { storageOK = false; return normalize(null); }
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); storageOK = true; } catch (e) { storageOK = false; }
+}
+function backupText() {
+  return JSON.stringify({ app: "gzw-companion", appVersion: APP_VERSION, exported: new Date().toISOString(), state }, null, 1);
+}
+function parseBackup(text) {
+  const data = JSON.parse(text);
+  const st = isObj(data) && isObj(data.state) ? data.state : data;
+  if (!isObj(st) || (!st.counts && !st.stationLevels)) throw new Error("This doesn't look like a GZW Companion backup.");
+  return normalize(st);
+}
+
+let state = loadState();
+
+// =============================================================
+// GAME LOGIC
+// =============================================================
+const getItem = (id) => BUILT_IN_BY_ID[id] || state.customItems.find((i) => i.id === id) || null;
+const itemName = (id) => (getItem(id) ? getItem(id).name : id + " (deleted item)");
+const allItems = () => [...BUILT_IN_ITEMS, ...state.customItems];
+const have = (id) => state.counts[id] || 0;
+const lvl = (stId) => state.stationLevels[stId] || 0;
+const fmtAmt = (id, n) => (getItem(id) && getItem(id).money ? "$" + fmt(n) : fmt(n));
+function setCountRaw(id, n) { n = Math.max(0, int(n)); if (n) state.counts[id] = n; else delete state.counts[id]; }
+
+function allRecipes() {
+  const out = BUILT_IN_RECIPES.map((r) => state.recipeOverrides[r.id]
+    ? { ...state.recipeOverrides[r.id], builtIn: true, edited: true }
+    : { ...r, builtIn: true, edited: false });
+  for (const r of state.customRecipes) out.push({ ...r, custom: true });
+  return out;
+}
+const getRecipe = (id) => allRecipes().find((r) => r.id === id) || null;
+
+function capabilities(levels = state.stationLevels) {
+  const c = {}; CAPS.forEach((x) => (c[x.id] = 0));
+  for (const st of STATIONS) {
+    const cur = levels[st.id] || 0;
+    for (let i = 0; i < cur; i++) for (const [k, v] of Object.entries(st.levels[i].gives)) c[k] = (c[k] || 0) + v;
+  }
+  return c;
+}
+function power(levels = state.stationLevels) {
+  let used = 0, made = 0;
+  for (const st of STATIONS) {
+    const cur = levels[st.id] || 0; if (!cur) continue;
+    used += st.levels[cur - 1].power; made += st.levels[cur - 1].produces;
+  }
+  return { used, made };
+}
+
+function stationInfo(st) {
+  const cur = lvl(st.id), max = st.levels.length;
+  if (cur >= max) return { status: "maxed", cur, max, unmet: [], missing: [] };
+  const next = st.levels[cur], caps = capabilities(), pw = power();
+  const unmet = Object.entries(next.needs).filter(([k, v]) => (caps[k] || 0) < v).map(([k, v]) => ({ id: k, min: v, have: caps[k] || 0 }));
+  const missing = Object.entries(next.req).filter(([id, q]) => have(id) < q).map(([id, q]) => ({ id, need: q, have: have(id) }));
+  const prev = cur ? st.levels[cur - 1] : null;
+  const delta = next.power - (prev ? prev.power : 0);
+  const made = pw.made - (prev ? prev.produces : 0) + next.produces;
+  const after = pw.used + delta;
+  const powerOver = delta > 0 && after > made;
+  const status = unmet.length ? "locked" : missing.length ? "missing" : "ready";
+  return { status, cur, max, next, unmet, missing, delta, after, made, powerOver };
+}
+
+// Stations whose unbuilt levels raise a capability
+function waysToRaise(capId) {
+  const out = [];
+  for (const st of STATIONS) {
+    for (let i = lvl(st.id); i < st.levels.length; i++) {
+      const g = st.levels[i].gives[capId];
+      if (g) out.push({ st, level: i + 1, name: st.levels[i].name, gives: g, isNext: i === lvl(st.id) });
+    }
+  }
+  return out;
+}
+// What building the next level of a station would unlock (stations + recipes)
+function unlocksOf(st) {
+  const cur = lvl(st.id); if (cur >= st.levels.length) return [];
+  const levelsAfter = { ...state.stationLevels, [st.id]: cur + 1 };
+  const before = capabilities(), after = capabilities(levelsAfter), out = [];
+  for (const o of STATIONS) {
+    if (o.id === st.id) continue;
+    const n = o.levels[lvl(o.id)]; if (!n) continue;
+    const ok = (c) => Object.entries(n.needs).every(([k, v]) => (c[k] || 0) >= v);
+    if (Object.keys(n.needs).length && !ok(before) && ok(after)) out.push({ label: o.name + " – " + n.name, href: "#/hideout/station/" + o.id });
+  }
+  for (const r of allRecipes()) {
+    const okBefore = recipeHardOk(r, state.stationLevels, before), okAfter = recipeHardOk(r, levelsAfter, after);
+    if (!okBefore && okAfter) out.push({ label: "Craft: " + r.name, href: "#/hideout/recipe/" + encodeURIComponent(r.id) });
+  }
+  return out;
+}
+function recipeHardOk(r, levels, caps) {
+  const stOk = !r.station || (levels[r.station.id] || 0) >= r.station.level;
+  const capOk = !r.cap || (caps[r.cap.id] || 0) >= r.cap.min;
+  return stOk && capOk;
+}
+
+function recipeInfo(r, n = 1) {
+  const caps = capabilities(), pw = power(), flags = state.recipeFlags[r.id] || {};
+  const stCur = r.station ? lvl(r.station.id) : 0;
+  const stationOk = !r.station || stCur >= r.station.level;
+  const capOk = !r.cap || (caps[r.cap.id] || 0) >= r.cap.min;
+  const foundOk = !r.needsRecipe || !!flags.found;
+  const taskOk = !r.task || !!flags.task;
+  const missing = r.ingredients.filter((x) => have(x.item) < x.qty * n);
+  const spare = pw.made - pw.used;
+  const powerOver = r.power > 0 && r.power > spare;
+  const incomplete = !r.ingredients.length || !r.output;
+  const status = incomplete ? "incomplete" : !stationOk || !capOk ? "locked" : !foundOk || !taskOk ? "needs" : missing.length ? "missing" : "craftable";
+  return { status, stCur, stationOk, capOk, capHave: r.cap ? caps[r.cap.id] || 0 : 0, foundOk, taskOk, missing, spare, powerOver, incomplete, flags };
+}
+
+// How many of each item you still need.
+// mode "next" = next level of every station · "max" = everything to max · "pinned" = next level of pinned stations
+// Pinned recipes (× amount) are always added on top.
+function computeNeeds(mode, opts = {}) {
+  const needs = {};
+  const add = (id, q) => (needs[id] = (needs[id] || 0) + q);
+  for (const st of STATIONS) {
+    const cur = lvl(st.id);
+    let rem = [];
+    if (mode === "max") rem = st.levels.slice(cur);
+    else if (mode === "next") rem = st.levels.slice(cur, cur + 1);
+    else if (mode === "pinned" && state.pins.includes(st.id)) rem = st.levels.slice(cur, cur + 1);
+    for (const lv of rem) for (const [id, q] of Object.entries(lv.req)) add(id, q);
+  }
+  if (!opts.noRecipes) {
+    for (const [rid, times] of Object.entries(state.recipePins)) {
+      const r = getRecipe(rid); if (!r) continue;
+      for (const x of r.ingredients) add(x.item, x.qty * times);
+    }
+  }
+  return needs;
+}
+
+function usedIn(itemId) {
+  const stations = [], recipes = [], madeBy = [];
+  for (const st of STATIONS) st.levels.forEach((lv, i) => {
+    if (lv.req[itemId]) stations.push({ st, level: i + 1, name: lv.name, qty: lv.req[itemId], built: lvl(st.id) > i });
+  });
+  for (const r of allRecipes()) {
+    const x = r.ingredients.find((g) => g.item === itemId);
+    if (x) recipes.push({ r, qty: x.qty, unsure: x.unsure });
+    if (r.output && r.output.item === itemId) madeBy.push(r);
+  }
+  return { stations, recipes, madeBy };
+}
+
+// =============================================================
+// SCREENS
+// =============================================================
+const ui = { invQuery: "", craftQuery: "", invMenu: false, openItem: null, craftN: {} };
+const MAIN_TABS = [
+  { id: "hideout", icon: "🏚️", label: "Hideout", ready: true, href: "#/hideout/inventory" },
+  { id: "player", icon: "🪖", label: "Player" },
+  { id: "weapons", icon: "🔫", label: "Weapon Builds" },
+  { id: "loot", icon: "💰", label: "Loot List" },
+  { id: "more", icon: "⚙️", label: "More" },
+];
+const HIDEOUT_TABS = [
+  { id: "inventory", icon: "📦", label: "Inventory" },
+  { id: "rooms", icon: "🏗️", label: "Rooms" },
+  { id: "crafting", icon: "🛠️", label: "Crafting" },
+  { id: "disassembly", icon: "🔩", label: "Disassembly" },
+];
+const STATUS = {
+  ready: "🟢 Ready", missing: "🟡 Missing items", locked: "🔒 Locked", maxed: "⭐ Maxed",
+  craftable: "🟢 Craftable", needs: "📜 Needs recipe/task", incomplete: "❔ Data missing",
+};
+const route = () => location.hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
+const capName = (id) => (CAP_BY_ID[id] ? CAP_BY_ID[id].name : id);
+const chip = (act, val, cur, label) => `<button class="chip ${val === cur ? "active" : ""}" data-act="${act}" data-v="${esc(val)}">${label}</button>`;
+const bar = (a, b, big) => `<span class="bar${big ? " big" : ""}"><span style="width:${b ? Math.min(100, Math.round((a / b) * 100)) : 0}%"></span></span>`;
+const ok = (b) => (b ? "✅" : "❌");
+
+function iconHtml(item) {
+  const letters = esc((item ? item.name : "?").split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase());
+  if (item && item.image) {
+    return `<span class="icon-wrap"><img class="icon" src="${esc(item.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('noimg')"><span class="icon placeholder">${letters}</span></span>`;
+  }
+  return `<span class="icon-wrap noimg"><span class="icon placeholder">${letters}</span></span>`;
+}
+function stepper(id) {
+  const item = getItem(id);
+  return `<div class="stepper">
+    <button class="step" data-id="${esc(id)}" data-step="-1" aria-label="Minus">−</button>
+    <input class="count${item && item.money ? " money" : ""}" data-count="${esc(id)}" inputmode="numeric" value="${have(id)}" aria-label="Amount">
+    <button class="step" data-id="${esc(id)}" data-step="1" aria-label="Plus">+</button></div>`;
+}
+// A have / need row with + / − (used in Rooms and Crafting)
+function matRow(id, need, extra = "") {
+  const item = getItem(id), h = have(id);
+  const done = need > 0 && h >= need;
+  return `<div class="row mat ${done ? "done" : ""}"><div class="row-main">
+    ${iconHtml(item)}
+    <div class="name"><span class="name-text"><span class="hn">${esc(itemName(id))}</span></span>
+      ${need > 0 ? `<span class="need"><span>${fmtAmt(id, h)} / ${fmtAmt(id, need)}</span>${bar(h, need)}</span>` : `<span class="need">You have ${fmtAmt(id, h)}</span>`}
+      ${extra}</div>
+    ${stepper(id)}</div></div>`;
+}
+const comingSoon = (name) => `<div class="coming-soon"><div class="home-icon">🚧</div><h2>${esc(name)}</h2><p>Coming in a later version.</p></div>`;
+
+function renderHome() {
+  return `<main class="home">${MAIN_TABS.map((t) => `<a class="home-card ${t.ready ? "" : "soon"}" href="${t.href || "#/" + t.id}">
+    <span class="home-icon">${t.icon}</span><span>${t.label}</span>${t.ready ? "" : "<small>Coming soon</small>"}</a>`).join("")}
+    <p class="footnote">${esc(DATA_SOURCE)}</p></main>`;
+}
+function readyJobs() { const now = Date.now(); return state.jobs.filter((j) => j.end <= now).length; }
+function renderSubtabs(active) {
+  const rj = readyJobs();
+  return `<nav class="subtabs">${HIDEOUT_TABS.map((t) => `<a href="#/hideout/${t.id}" class="${active === t.id ? "active" : ""}">${t.icon} ${t.label}${t.id === "crafting" && rj ? ` <span class="pill">${rj}</span>` : ""}</a>`).join("")}</nav>`;
+}
+
+// ---------------- INVENTORY ----------------
+function invVisible() {
+  const p = state.prefs, needs = computeNeeds(p.needMode), favs = new Set(state.favorites);
+  const idx = new Map(state.order.map((id, i) => [id, i]));
+  const catIdx = new Map(CATEGORIES.map((c, i) => [c.id, i]));
+  let list = allItems().filter((it) => {
+    if (p.category === "favorites" && !favs.has(it.id)) return false;
+    if (p.category === "custom" && !it.custom) return false;
+    if (!["all", "favorites", "custom"].includes(p.category) && it.category !== p.category) return false;
+    if (ui.invQuery && !fuzzy(ui.invQuery, it.name)) return false;
+    if (p.neededOnly && !((needs[it.id] || 0) > have(it.id))) return false;
+    return true;
+  });
+  const byOrder = (a, b) => (idx.get(a.id) ?? 1e9) - (idx.get(b.id) ?? 1e9);
+  const sorters = {
+    custom: byOrder,
+    az: (a, b) => a.name.localeCompare(b.name),
+    needed: (a, b) => (Math.max(0, (needs[b.id] || 0) - have(b.id)) - Math.max(0, (needs[a.id] || 0) - have(a.id))) || byOrder(a, b),
+    category: (a, b) => (catIdx.get(a.category) - catIdx.get(b.category)) || byOrder(a, b),
+  };
+  list.sort(sorters[p.sort] || byOrder);
+  return { list, needs, favs };
+}
+function invRow(it, needs, favs, canDrag) {
+  const need = needs[it.id] || 0, h = have(it.id), fav = favs.has(it.id), open = ui.openItem === it.id;
+  const modeLabel = { next: "next levels", max: "to max", pinned: "pinned" }[state.prefs.needMode];
+  return `<div class="row ${need > 0 && h >= need ? "done" : ""} ${open ? "open" : ""}" data-id="${esc(it.id)}">
+    <div class="row-main">
+      ${canDrag ? `<button class="handle" data-handle aria-label="Drag to reorder">≡</button>` : ""}
+      ${iconHtml(it)}
+      <button class="name" data-act="toggle-item" data-id="${esc(it.id)}">
+        <span class="name-text"><span class="hn">${esc(it.name)}</span>${it.custom ? '<span class="tag">Custom</span>' : ""}</span>
+        ${need > 0 ? `<span class="need"><span>${fmtAmt(it.id, h)} / ${fmtAmt(it.id, need)}</span>${bar(h, need)}</span>` : `<span class="need">Not needed (${modeLabel})</span>`}
+      </button>
+      <button class="star ${fav ? "on" : ""}" data-act="fav" data-id="${esc(it.id)}" aria-label="Favorite">${fav ? "★" : "☆"}</button>
+      ${stepper(it.id)}
+    </div>
+    ${open ? `<div class="details">${itemDetails(it)}</div>` : ""}
+  </div>`;
+}
+function itemDetails(it) {
+  const u = usedIn(it.id), maxNeed = computeNeeds("max")[it.id] || 0, spare = have(it.id) - maxNeed;
+  const cat = CATEGORIES.find((c) => c.id === it.category);
+  let h = `<div><b>${esc(cat ? cat.label : it.category)}</b>${it.info ? " · " + esc(it.info) : ""}</div>`;
+  if (maxNeed > 0 && spare > 0) h += `<div>✅ ${fmtAmt(it.id, spare)} spare – more than you need to max everything (plus pinned crafts). Safe to sell.</div>`;
+  else if (maxNeed === 0 && have(it.id) > 0 && !u.recipes.length) h += `<div>Not used by any station or known recipe.</div>`;
+  if (u.stations.length) h += `<div><b>Stations</b><ul>${u.stations.map((s) => `<li>${s.built ? "✅ " : ""}<a href="#/hideout/station/${s.st.id}">${esc(s.st.name)} L${s.level}</a> (${esc(s.name)}) ×${fmtAmt(it.id, s.qty)}</li>`).join("")}</ul></div>`;
+  if (u.recipes.length) h += `<div><b>Used in recipes</b><ul>${u.recipes.map((x) => `<li><a href="#/hideout/recipe/${encodeURIComponent(x.r.id)}">${esc(x.r.name)}</a> ×${x.qty}${x.unsure ? "?" : ""}</li>`).join("")}</ul></div>`;
+  if (u.madeBy.length) h += `<div><b>Made by</b><ul>${u.madeBy.map((r) => `<li>🔗 <a href="#/hideout/recipe/${encodeURIComponent(r.id)}">${esc(r.name)}</a></li>`).join("")}</ul></div>`;
+  if (it.custom) h += `<div class="inline"><button class="btn" data-act="edit-item" data-id="${esc(it.id)}">✏️ Edit</button><button class="btn danger" data-act="delete-item" data-id="${esc(it.id)}">🗑 Delete</button></div>`;
+  return h;
+}
+function renderInvList() {
+  const { list, needs, favs } = invVisible();
+  const canDrag = state.prefs.sort === "custom";
+  if (!list.length) return `<div class="empty">No items match. ${ui.invQuery ? "Try another search." : ""}</div>`;
+  const favList = state.prefs.category === "favorites" ? [] : list.filter((i) => favs.has(i.id));
+  const rest = state.prefs.category === "favorites" ? list : list.filter((i) => !favs.has(i.id));
+  let h = "";
+  if (favList.length) h += `<div class="section-title">★ Favorites</div><div class="sortable">${favList.map((i) => invRow(i, needs, favs, canDrag)).join("")}</div>`;
+  if (rest.length) h += `<div class="section-title">${state.prefs.category === "favorites" ? "★ Favorites" : "All items"} (${rest.length})</div><div class="sortable">${rest.map((i) => invRow(i, needs, favs, canDrag)).join("")}</div>`;
+  return h;
+}
+function renderInventory() {
+  const p = state.prefs, needs = computeNeeds(p.needMode);
+  let got = 0, total = 0;
+  for (const it of allItems()) { if (it.money) continue; const n = needs[it.id] || 0; total += n; got += Math.min(n, have(it.id)); }
+  const cashNeed = needs["us-dollars"] || 0;
+  const cats = [["all", "All"], ...CATEGORIES.map((c) => [c.id, c.label]), ["favorites", "★"], ["custom", "Custom"]];
+  return `<div class="toolbar">
+    <div class="toolbar-row">
+      <input class="search" id="inv-search" data-input="inv-search" type="search" placeholder="🔍 Search items..." value="${esc(ui.invQuery)}">
+      <button class="btn primary" data-act="add-item">＋ Add</button>
+      <button class="btn" data-act="inv-menu" aria-label="More">⋯</button>
+    </div>
+    ${ui.invMenu ? backupMenu() : ""}
+    <div class="chips">${cats.map(([v, l]) => chip("inv-cat", v, p.category, l)).join("")}</div>
+    <div class="toolbar-row small">
+      <label>Sort <select data-change="inv-sort">${[["custom", "Custom (drag)"], ["az", "A–Z"], ["needed", "Most needed"], ["category", "Category"]].map(([v, l]) => `<option value="${v}" ${p.sort === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+      <label>Need <select data-change="inv-need">${[["max", "Everything to max"], ["next", "Next level only"], ["pinned", "Pinned only"]].map(([v, l]) => `<option value="${v}" ${p.needMode === v ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+      <label class="check"><input type="checkbox" data-change="inv-needed" ${p.neededOnly ? "checked" : ""}> Needed only</label>
+    </div>
+    <div class="overall"><span>Materials collected: ${fmt(got)} / ${fmt(total)}${Object.keys(state.recipePins).length ? " (includes pinned crafts)" : ""}</span>${bar(got, total)}
+      ${cashNeed ? `<span>Cash: $${fmt(have("us-dollars"))} / $${fmt(cashNeed)}</span>` : ""}</div>
+    ${p.sort !== "custom" ? `<p class="muted-s">Switch Sort to “Custom” to drag items with ≡.</p>` : ""}
+  </div>
+  <div id="inv-list">${renderInvList()}</div>`;
+}
+function backupMenu() {
+  return `<div class="menu">
+    <button class="btn" data-act="export">⬇️ Download backup</button>
+    <button class="btn" data-act="import">⬆️ Restore from file</button>
+    <button class="btn" data-act="copy-backup">📋 Copy backup text</button>
+    <button class="btn" data-act="paste-backup">📥 Paste backup text</button>
+    <button class="btn danger" data-act="reset">♻️ Reset for wipe</button>
+  </div>`;
+}
+
+// ---------------- ROOMS ----------------
+function banner() {
+  let h = "";
+  if (!storageOK) h += `<div class="warnbox">⚠️ Saving isn't available in this browser view. Your data will be lost when you close it. Use ⋯ → Copy backup text in Inventory.</div>`;
+  if (!state.prefs.hideBanner) h += `<div class="banner"><div>🔑 <b>Hideout unlock:</b> Lab Rat rank 2 (some sources also say Artisan rank 2). Hideout smuggling tasks need Banshee rank 3.</div><button class="x" data-act="hide-banner" aria-label="Hide">✕</button></div>`;
+  return h;
+}
+function renderRoomsOverview() {
+  const pw = power(), caps = capabilities();
+  const built = STATIONS.reduce((n, s) => n + lvl(s.id), 0);
+  const infos = STATIONS.map((s) => ({ s, i: stationInfo(s) }));
+  const ready = infos.filter((x) => x.i.status === "ready");
+  const pinned = infos.filter((x) => state.pins.includes(x.s.id));
+  return `${banner()}
+  <div class="card">
+    <div class="summary-row"><h3>Hideout progress</h3><span>${built} / ${TOTAL_LEVELS} upgrades</span></div>
+    ${bar(built, TOTAL_LEVELS, true)}
+    <div class="stat-grid">
+      <div class="stat ${pw.used > pw.made ? "bad" : ""}"><b>⚡ ${pw.used} / ${pw.made} kW</b>Power used / made</div>
+      <div class="stat"><b>🟢 ${ready.length}</b>Ready to build</div>
+      <div class="stat"><b>📌 ${state.pins.length}</b>Pinned goals</div>
+    </div>
+    ${ready.length ? `<div class="ready-links">${ready.map((x) => `<a href="#/hideout/station/${x.s.id}">🟢 ${esc(x.s.name)} → L${x.i.cur + 1}</a>`).join("")}</div>` : ""}
+  </div>
+  ${pinned.length || Object.keys(state.recipePins).length ? `<div class="card"><div class="summary-row"><h3>📌 Pinned goals</h3><button class="btn" data-act="shopping-list">🛒 Shopping list</button></div>
+    ${pinned.map((x) => `<a class="pin-line" href="#/hideout/station/${x.s.id}">${esc(x.s.name)} → ${x.i.next ? esc(x.i.next.name) : "Maxed"} <span class="badge ${x.i.status}">${STATUS[x.i.status]}</span></a>`).join("")}
+    ${Object.entries(state.recipePins).map(([id, q]) => { const r = getRecipe(id); return r ? `<a class="pin-line" href="#/hideout/recipe/${encodeURIComponent(id)}">🛠 ${esc(r.name)} ×${q}</a>` : ""; }).join("")}</div>` : ""}
+  <div class="section-title">Rooms</div>
+  ${ROOMS.map((room) => {
+    const sts = STATIONS.filter((s) => s.room === room.id);
+    const b = sts.reduce((n, s) => n + lvl(s.id), 0), t = sts.reduce((n, s) => n + s.levels.length, 0);
+    const r = sts.filter((s) => stationInfo(s).status === "ready").length;
+    return `<a class="card room-card" href="#/hideout/rooms/${room.id}"><div class="rc-top"><span class="rc-icon">${room.icon}</span><span class="rc-name">${esc(room.name)}</span><span>${b} / ${t}</span></div>
+      ${bar(b, t, true)}<div class="rc-sub">${sts.length} stations${r ? ` · 🟢 ${r} ready` : ""}</div></a>`;
+  }).join("")}
+  <div class="section-title">Capabilities</div>
+  <div class="cap-grid">${CAPS.map((c) => `<div class="cap"><span>${esc(c.name)}</span><b>${caps[c.id]}</b></div>`).join("")}</div>`;
+}
+function stationSub(i) {
+  if (i.status === "maxed") return "All levels built";
+  let s = `Next: ${esc(i.next.name)} (Level ${i.cur + 1})`;
+  if (i.unmet.length) s += " · Needs " + i.unmet.map((u) => `${esc(capName(u.id))} ≥ ${u.min}`).join(", ");
+  else if (i.missing.length) s += ` · ${i.missing.length} item${i.missing.length > 1 ? "s" : ""} short`;
+  if (i.next.power) s += ` · ⚡${i.next.power} kW`;
+  return s;
+}
+function renderRoom(roomId) {
+  const room = ROOM_BY_ID[roomId];
+  if (!room) return `<div class="empty">Room not found. <a href="#/hideout/rooms">Back to rooms</a></div>`;
+  const f = state.prefs.roomFilter;
+  const list = STATIONS.filter((s) => s.room === roomId).map((s) => ({ s, i: stationInfo(s) })).filter((x) => f === "all" || x.i.status === f);
+  return `<a class="crumb" href="#/hideout/rooms">← All rooms</a>
+  <h2>${room.icon} ${esc(room.name)}</h2>
+  <div class="chips" style="margin:10px 0">${[["all", "All"], ["ready", "🟢 Ready"], ["missing", "🟡 Missing"], ["locked", "🔒 Locked"], ["maxed", "⭐ Maxed"]].map(([v, l]) => chip("room-filter", v, f, l)).join("")}</div>
+  ${list.length ? list.map(({ s, i }) => `<a class="card station-card ${i.status}" href="#/hideout/station/${s.id}">
+    <div class="sc-top"><span class="sc-name">${state.pins.includes(s.id) ? "📌 " : ""}${esc(s.name)}</span><span class="badge ${i.status}">${STATUS[i.status]}</span></div>
+    <div class="dots">${s.levels.map((_, n) => `<span class="dot ${n < i.cur ? "on" : ""}"></span>`).join("")}</div>
+    <div class="sc-sub">Level ${i.cur} / ${i.max} · ${stationSub(i)}</div></a>`).join("") : `<div class="empty">No stations with this status.</div>`}`;
+}
+const givesText = (g) => Object.entries(g).map(([k, v]) => `${esc(capName(k))} +${v}`).join(", ") || "–";
+function renderStation(id) {
+  const st = STATION_BY_ID[id];
+  if (!st) return `<div class="empty">Station not found. <a href="#/hideout/rooms">Back to rooms</a></div>`;
+  const i = stationInfo(st), pinned = state.pins.includes(st.id), room = ROOM_BY_ID[st.room], pw = power();
+  let h = `<a class="crumb" href="#/hideout/rooms/${st.room}">← ${esc(room.name)}</a>
+  <div class="card"><div class="sd-head"><div><h2>${esc(st.name)}</h2><div class="muted-s">Level ${i.cur} / ${i.max}${i.cur ? " · " + esc(st.levels[i.cur - 1].name) : " · not built"}</div></div>
+    <button class="btn pin ${pinned ? "on" : ""}" data-act="pin-station" data-id="${st.id}">📌 ${pinned ? "Pinned" : "Pin"}</button></div>
+    <div class="dots">${st.levels.map((_, n) => `<span class="dot ${n < i.cur ? "on" : ""}"></span>`).join("")}</div>`;
+  if (i.status === "maxed") {
+    h += `<p class="hint">⭐ Maxed – every level is built.</p></div>`;
+  } else {
+    const n = i.next;
+    h += `<h3 style="margin-top:12px">Next: ${esc(n.name)} (Level ${i.cur + 1}) <span class="badge ${i.status}">${STATUS[i.status]}</span></h3>`;
+    const needs = Object.entries(n.needs);
+    if (needs.length) {
+      h += `<ul class="req">${needs.map(([k, v]) => {
+        const hv = capabilities()[k] || 0, good = hv >= v;
+        const ways = good ? "" : `<ul class="ways">${waysToRaise(k).map((w) => `<li><a href="#/hideout/station/${w.st.id}">${esc(w.st.name)} L${w.level} – ${esc(w.name)}</a> (+${w.gives})${w.isNext ? "" : " · later level"}</li>`).join("") || "<li>No known station raises this.</li>"}</ul>`;
+        return `<li>${ok(good)} Needs ${esc(capName(k))} ≥ ${v} (you: ${hv})${ways}</li>`;
+      }).join("")}</ul>`;
+    }
+    h += `<div class="effects"><span>🎁 Gives: ${givesText(n.gives)}</span>`;
+    if (n.produces) h += `<span>⚡ Produces ${n.produces} kW (now ${pw.made} kW)</span>`;
+    if (i.delta > 0) h += `<span class="${i.powerOver ? "over" : ""}">⚡ Uses ${n.power} kW · after build: ${i.after} / ${i.made} kW${i.powerOver ? " – over the limit" : ""}</span>`;
+    else if (!n.produces) h += `<span>⚡ Power: ${n.power ? n.power + " kW" : "none recorded"}</span>`;
+    const un = unlocksOf(st);
+    if (un.length) h += `<span>🔓 Unlocks: ${un.map((u) => `<a href="${u.href}">${esc(u.label)}</a>`).join(", ")}</span>`;
+    h += `</div>`;
+    if (n.warn) h += `<div class="warnbox">⚠️ Sources disagree: ${esc(n.warn)} Check in-game.</div>`;
+    h += `<div class="mat-list">${Object.entries(n.req).map(([iid, q]) => matRow(iid, q)).join("")}</div>
+    <div id="build-area">
+      <button class="btn primary build-btn" data-act="build" data-id="${st.id}" ${i.missing.length ? "disabled" : ""}>🔨 Build ${esc(n.name)}</button>
+      ${i.missing.length ? `<p class="build-note">Missing: ${i.missing.map((m) => `${esc(itemName(m.id))} (${fmtAmt(m.id, m.have)}/${fmtAmt(m.id, m.need)})`).join(", ")}. Already built it in-game? Use Set level below.</p>` : ""}
+      ${!i.missing.length && i.unmet.length ? `<p class="build-warn">🔒 Requirement not met – you can still build, since the data is unconfirmed.</p>` : ""}
+      ${!i.missing.length && i.powerOver ? `<p class="build-warn">⚡ This would go over your power limit.</p>` : ""}
+    </div></div>`;
+  }
+  h += `<div class="card"><h3>Set level (no cost)</h3><p class="muted-s">For first setup, if you already built this in-game. Inventory is not changed.</p>
+    <div class="inline"><select id="set-level">${[0, ...st.levels.map((_, n) => n + 1)].map((n) => `<option value="${n}" ${n === i.cur ? "selected" : ""}>Level ${n}${n ? " – " + esc(st.levels[n - 1].name) : " (not built)"}</option>`).join("")}</select>
+    <button class="btn" data-act="set-level" data-id="${st.id}">Apply</button></div></div>`;
+  const rs = allRecipes().filter((r) => r.station && r.station.id === st.id);
+  if (rs.length) h += `<div class="card"><h3>🛠 Crafting unlocked here</h3>${rs.map((r) => `<div class="lvl">${ok(i.cur >= r.station.level)} <a href="#/hideout/recipe/${encodeURIComponent(r.id)}">${esc(r.name)}</a> – needs Level ${r.station.level}${r.stationGuess ? " (guess)" : ""}</div>`).join("")}</div>`;
+  h += `<details class="card"><summary>All levels (${st.levels.map((_, n) => n + 1).join(" · ")})</summary>
+    ${st.levels.map((lv, n) => `<div class="lvl ${n === i.cur ? "next" : ""}"><div class="lvl-head"><b>L${n + 1} – ${esc(lv.name)}</b><span>${n < i.cur ? "✅ Built" : n === i.cur ? "Next" : ""}</span></div>
+      <div class="lvl-req">${Object.entries(lv.req).map(([iid, q]) => `${esc(itemName(iid))} ×${fmtAmt(iid, q)}`).join(" · ")}</div>
+      <div class="lvl-meta">Gives: ${givesText(lv.gives)}${Object.keys(lv.needs).length ? " · Needs: " + Object.entries(lv.needs).map(([k, v]) => `${esc(capName(k))} ≥ ${v}`).join(", ") : ""}${lv.power ? ` · ⚡${lv.power} kW` : ""}${lv.produces ? ` · Makes ${lv.produces} kW` : ""}${lv.warn ? " · ⚠️ " + esc(lv.warn) : ""}</div></div>`).join("")}
+  </details>`;
+  return h;
+}
+
+// ---------------- CRAFTING ----------------
+function recipeTags(r) {
+  return (r.custom ? '<span class="tag">Custom</span>' : "") + (r.edited ? '<span class="tag">Edited</span>' : "") +
+    (state.recipePins[r.id] ? `<span class="tag">📌×${state.recipePins[r.id]}</span>` : "");
+}
+function jobsCard(filterRecipe) {
+  const jobs = state.jobs.filter((j) => !filterRecipe || j.recipeId === filterRecipe).sort((a, b) => a.end - b.end);
+  if (!jobs.length) return "";
+  const now = Date.now();
+  return `<div class="card"><h3>⏱ Active crafts</h3>${jobs.map((j) => `<div class="job">
+    <div class="job-main"><b>${esc(j.name)} ×${j.output.qty}</b><span class="muted-s">${esc(ROOM_BY_ID[j.room] ? ROOM_BY_ID[j.room].name : "")} · <span data-end="${j.end}">${fmtDur(j.end - now)}</span></span>
+      ${bar(Math.min(now, j.end) - j.start, j.end - j.start)}</div>
+    <button class="btn primary" data-act="collect" data-id="${esc(j.id)}" data-collect="${j.end}" ${j.end > now ? "disabled" : ""}>Collect</button>
+    <button class="btn" data-act="cancel-job" data-id="${esc(j.id)}" aria-label="Cancel">✕</button></div>`).join("")}</div>`;
+}
+function recipeVisible() {
+  const p = state.prefs;
+  return allRecipes().map((r) => ({ r, i: recipeInfo(r) })).filter(({ r, i }) => {
+    if (p.craftRoom === "custom" && !r.custom && !r.edited) return false;
+    if (p.craftRoom === "pinned" && !state.recipePins[r.id]) return false;
+    if (ROOM_BY_ID[p.craftRoom] && r.room !== p.craftRoom) return false;
+    if (p.craftStatus !== "all" && i.status !== p.craftStatus) return false;
+    if (ui.craftQuery && !fuzzy(ui.craftQuery, r.name) && !(r.output && fuzzy(ui.craftQuery, itemName(r.output.item)))) return false;
+    return true;
+  });
+}
+function recipeCard(r, i) {
+  const blockers = [];
+  if (r.station && !i.stationOk) blockers.push(`❌ ${esc(STATION_BY_ID[r.station.id].name)} L${r.station.level}`);
+  if (r.cap && !i.capOk) blockers.push(`❌ ${esc(capName(r.cap.id))} ≥ ${r.cap.min}`);
+  if (!i.foundOk) blockers.push("❌ Recipe not found");
+  if (!i.taskOk) blockers.push("❌ Task: " + esc(r.task));
+  const haveN = r.ingredients.filter((x) => have(x.item) >= x.qty).length;
+  return `<a class="card station-card ${i.status}" href="#/hideout/recipe/${encodeURIComponent(r.id)}">
+    <div class="sc-top"><span class="sc-name">${esc(r.name)}${recipeTags(r)}</span><span class="badge ${i.status}">${STATUS[i.status]}</span></div>
+    <div class="sc-sub">${ROOM_BY_ID[r.room].icon} ${esc(ROOM_BY_ID[r.room].name)}${r.output ? ` · makes ${esc(itemName(r.output.item))} ×${r.output.qty}` : ""}${r.time ? " · ⏱ " + fmtMinutes(r.time) : ""}</div>
+    <div class="sc-sub">${r.ingredients.length ? `Ingredients: ${haveN} / ${r.ingredients.length} ready` : "Ingredients unknown – tap Edit to add"}</div>
+    ${blockers.length ? `<div class="sc-sub">${blockers.join(" · ")}</div>` : ""}</a>`;
+}
+function renderCraftList() {
+  const list = recipeVisible();
+  if (!list.length) return `<div class="empty">No recipes match.</div>`;
+  return list.map(({ r, i }) => recipeCard(r, i)).join("");
+}
+function renderCrafting() {
+  const p = state.prefs, all = allRecipes().map((r) => recipeInfo(r));
+  const counts = (s) => all.filter((i) => i.status === s).length;
+  return `${!p.hideCraftNote ? `<div class="banner"><div>📝 <b>Most recipe data isn't published yet.</b> Recipes are items you find in the world, and some come from Artisan tasks. Hacking tool ingredients are confirmed; amounts, station levels and times are guesses. Use <b>Edit</b> to fix a recipe – your fix is kept even when the app's data updates.</div><button class="x" data-act="hide-craft-note" aria-label="Hide">✕</button></div>` : ""}
+  ${jobsCard()}
+  <div class="toolbar">
+    <div class="toolbar-row"><input class="search" id="craft-search" data-input="craft-search" type="search" placeholder="🔍 Search recipes..." value="${esc(ui.craftQuery)}">
+      <button class="btn primary" data-act="add-recipe">＋ Add recipe</button></div>
+    <div class="chips">${[["all", "All"], ["workshop", "🔧 Workshop"], ["laboratory", "🧪 Lab"], ["pinned", "📌 Pinned"], ["custom", "Custom / edited"]].map(([v, l]) => chip("craft-room", v, p.craftRoom, l)).join("")}</div>
+    <div class="chips">${[["all", "Any status"], ["craftable", `🟢 Craftable (${counts("craftable")})`], ["missing", `🟡 Missing (${counts("missing")})`], ["needs", `📜 Needs recipe/task (${counts("needs")})`], ["locked", `🔒 Locked (${counts("locked")})`], ["incomplete", `❔ Data missing (${counts("incomplete")})`]].map(([v, l]) => chip("craft-status", v, p.craftStatus, l)).join("")}</div>
+  </div>
+  <div id="craft-list">${renderCraftList()}</div>`;
+}
+function renderRecipe(id) {
+  const r = getRecipe(id);
+  if (!r) return `<div class="empty">Recipe not found. <a href="#/hideout/crafting">Back to crafting</a></div>`;
+  const n = ui.craftN[r.id] || 1, i = recipeInfo(r, n), room = ROOM_BY_ID[r.room];
+  const pinQ = state.recipePins[r.id] || 0;
+  const st = r.station ? STATION_BY_ID[r.station.id] : null;
+  let h = `<a class="crumb" href="#/hideout/crafting">← Crafting</a>
+  <div class="card"><div class="sd-head"><div><h2>${esc(r.name)}${recipeTags(r)}</h2><div class="muted-s">${room.icon} ${esc(room.name)}${r.output ? ` · makes ${esc(itemName(r.output.item))} ×${r.output.qty}` : ""}</div></div>
+    <span class="badge ${i.status}">${STATUS[i.status]}</span></div>
+    <div class="inline">
+      <button class="btn pin ${pinQ ? "on" : ""}" data-act="pin-recipe" data-id="${esc(r.id)}">📌 ${pinQ ? "Pinned" : "Pin to shopping list"}</button>
+      ${pinQ ? `<span class="stepper"><button class="btn" data-act="pin-qty" data-id="${esc(r.id)}" data-d="-1">−</button><b>×${pinQ}</b><button class="btn" data-act="pin-qty" data-id="${esc(r.id)}" data-d="1">+</button></span>` : ""}
+    </div>
+    <h3 style="margin-top:12px">Requirements</h3><ul class="req">
+      ${st ? `<li>${ok(i.stationOk)} <a href="#/hideout/station/${st.id}">${esc(st.name)}</a> Level ≥ ${r.station.level} (you: ${i.stCur})${r.stationGuess ? ' <span class="tag">guess</span>' : ""}</li>` : `<li>❔ Station requirement unknown</li>`}
+      ${r.cap ? `<li>${ok(i.capOk)} ${esc(capName(r.cap.id))} ≥ ${r.cap.min} (you: ${i.capHave})${i.capOk ? "" : `<ul class="ways">${waysToRaise(r.cap.id).map((w) => `<li><a href="#/hideout/station/${w.st.id}">${esc(w.st.name)} L${w.level}</a> (+${w.gives})</li>`).join("")}</ul>`}</li>` : ""}
+      ${r.needsRecipe ? `<li><label class="check"><input type="checkbox" data-change="flag" data-id="${esc(r.id)}" data-flag="found" ${i.flags.found ? "checked" : ""}> 📜 I've found / learned this recipe</label></li>` : ""}
+      ${r.task ? `<li><label class="check"><input type="checkbox" data-change="flag" data-id="${esc(r.id)}" data-flag="task" ${i.flags.task ? "checked" : ""}> 🎯 Task done: ${esc(r.task)}</label></li>` : ""}
+      <li>⚡ Power: ${r.power ? `${r.power} kW (spare: ${i.spare} kW)${i.powerOver ? ' <span class="over">– not enough</span>' : ""}` : "none recorded"}</li>
+      <li>⏱ Craft time: ${r.time ? fmtMinutes(r.time) + (n > 1 ? ` × ${n} = ${fmtMinutes(r.time * n)}` : "") : "unknown (crafts instantly in the app)"}</li>
+    </ul>`;
+  if (!r.ingredients.length) {
+    h += `<p class="hint">❔ Ingredients for this recipe haven't been published yet. Tap <b>Edit recipe</b> to add them when you see them in-game.</p>`;
+  } else {
+    h += `<div class="summary-row" style="margin-top:10px"><h3>Ingredients</h3><span class="stepper">Craft <button class="btn" data-act="craft-n" data-id="${esc(r.id)}" data-d="-1">−</button><b>×${n}</b><button class="btn" data-act="craft-n" data-id="${esc(r.id)}" data-d="1">+</button></span></div>
+    <div class="mat-list">${r.ingredients.map((x) => {
+      const makers = usedIn(x.item).madeBy.filter((m) => m.id !== r.id);
+      const extra = (x.unsure ? `<span class="muted-s">×${x.qty}? amount unconfirmed</span>` : "") +
+        (makers.length ? `<span class="muted-s">🔗 Craft first: ${makers.map((m) => `<a href="#/hideout/recipe/${encodeURIComponent(m.id)}">${esc(m.name)}</a>`).join(", ")}</span>` : "");
+      return matRow(x.item, x.qty * n, extra);
+    }).join("")}</div>`;
+  }
+  if (r.output) h += `<h3 style="margin-top:10px">Makes</h3><div class="mat-list">${matRow(r.output.item, 0, `<span class="muted-s">+${r.output.qty * n} when crafted</span>`)}</div>`;
+  const blockedHard = i.incomplete || !i.stationOk || !i.capOk || i.missing.length > 0;
+  h += `<div id="build-area"><button class="btn primary build-btn" data-act="craft" data-id="${esc(r.id)}" ${blockedHard ? "disabled" : ""}>🛠 Craft${n > 1 ? " ×" + n : ""}</button>
+    ${i.incomplete ? `<p class="build-note">Add ingredients and an output with Edit recipe first.</p>` : ""}
+    ${!i.incomplete && (!i.stationOk || !i.capOk) ? `<p class="build-warn">🔒 Locked – ${!i.stationOk ? `build ${esc(st.name)} to Level ${r.station.level} first` : `raise ${esc(capName(r.cap.id))} to ${r.cap.min}`}.</p>` : ""}
+    ${!i.incomplete && i.stationOk && i.capOk && i.missing.length ? `<p class="build-note">Missing: ${i.missing.map((x) => `${esc(itemName(x.item))} (${have(x.item)}/${x.qty * n})`).join(", ")}</p>` : ""}
+    ${!blockedHard && (!i.foundOk || !i.taskOk) ? `<p class="build-note">📜 Not ticked: ${[!i.foundOk ? "recipe found" : "", !i.taskOk ? "task done" : ""].filter(Boolean).join(" and ")}. You can still craft.</p>` : ""}
+  </div></div>`;
+  h += jobsCard(r.id);
+  h += `<div class="card">${r.notes ? `<p class="modal-msg">${esc(r.notes)}</p>` : ""}${r.source ? `<p class="muted-s">Source: ${esc(r.source)}</p>` : ""}
+    <div class="inline"><button class="btn" data-act="edit-recipe" data-id="${esc(r.id)}">✏️ Edit recipe</button>
+    ${r.edited ? `<button class="btn" data-act="reset-recipe" data-id="${esc(r.id)}">↩️ Reset to default</button>` : ""}
+    ${r.custom ? `<button class="btn danger" data-act="delete-recipe" data-id="${esc(r.id)}">🗑 Delete</button>` : ""}</div></div>`;
+  return h;
+}
+
+// ---------------- FORMS (modals) ----------------
+function itemOptions(selected) {
+  return CATEGORIES.map((c) => {
+    const items = allItems().filter((i) => i.category === c.id && !i.money);
+    return items.length ? `<optgroup label="${esc(c.label)}">${items.map((i) => `<option value="${esc(i.id)}" ${i.id === selected ? "selected" : ""}>${esc(i.name)}</option>`).join("")}</optgroup>` : "";
+  }).join("");
+}
+function ingRowHtml(x) {
+  return `<div class="ing-row"><select class="ing-item"><option value="">– pick item –</option>${itemOptions(x && x.item)}</select>
+    <input class="ing-qty" type="number" min="1" inputmode="numeric" value="${x ? x.qty : 1}" aria-label="Amount">
+    <label class="check" title="Amount not confirmed"><input type="checkbox" class="ing-unsure" ${x && x.unsure ? "checked" : ""}>?</label>
+    <button type="button" class="x" data-act="ing-remove" aria-label="Remove">✕</button></div>`;
+}
+function openItemForm(id) {
+  const it = id ? state.customItems.find((i) => i.id === id) : null;
+  openModal(`<form data-form="item" data-id="${it ? esc(it.id) : ""}"><h3>${it ? "Edit material" : "Add new material"}</h3>
+    <label>Name<input name="name" required maxlength="60" value="${esc(it ? it.name : "")}"></label>
+    <label>Category<select name="category">${CATEGORIES.map((c) => `<option value="${c.id}" ${(it ? it.category : "building") === c.id ? "selected" : ""}>${c.label}</option>`).join("")}</select></label>
+    <label>Picture link (optional)<input name="image" type="url" value="${esc(it ? it.image : "")}" placeholder="https://..."></label>
+    <label>Notes (optional)<textarea name="info" rows="2">${esc(it ? it.info : "")}</textarea></label>
+    <label>+ / − step<input name="step" type="number" min="1" value="${it ? it.step : 1}"></label>
+    <p class="error" id="form-error"></p>
+    <div class="modal-buttons"><button type="submit" class="btn primary">Save</button><button type="button" class="btn" data-act="modal-close">Cancel</button></div></form>`);
+}
+function openRecipeForm(id) {
+  const r = id ? getRecipe(id) : null;
+  const kind = !r ? "new" : r.custom ? "custom" : "builtin";
+  const v = r || { name: "", room: "workshop", output: null, ingredients: [], station: null, cap: null, needsRecipe: true, task: "", power: 0, time: 0, notes: "" };
+  const stOpts = ROOMS.map((room) => `<optgroup label="${esc(room.name)}">${STATIONS.filter((s) => s.room === room.id).map((s) => `<option value="${s.id}" ${v.station && v.station.id === s.id ? "selected" : ""}>${esc(s.name)}</option>`).join("")}</optgroup>`).join("");
+  openModal(`<form data-form="recipe" data-id="${r ? esc(r.id) : ""}" data-kind="${kind}" class="wide"><h3>${r ? "Edit recipe" : "Add recipe"}</h3>
+    ${kind === "builtin" ? `<p class="muted-s">Your changes are saved separately. “Reset to default” brings back the original.</p>` : ""}
+    <label>Recipe name<input name="name" required maxlength="80" value="${esc(v.name)}"></label>
+    <label>Room<select name="room">${ROOMS.filter((x) => x.id !== "utility").map((x) => `<option value="${x.id}" ${v.room === x.id ? "selected" : ""}>${esc(x.name)}</option>`).join("")}</select></label>
+    <div class="two"><label>Makes<select name="output" data-change="output-select"><option value="__new">＋ New item…</option>${itemOptions(v.output ? v.output.item : null)}</select></label>
+      <label class="narrow">Amount<input name="outQty" type="number" min="1" value="${v.output ? v.output.qty : 1}"></label></div>
+    <label id="new-output" ${v.output ? "hidden" : ""}>New item name (added to Inventory as “Crafted”)<input name="newOutput" maxlength="60"></label>
+    <div><div class="summary-row"><b>Ingredients</b><span class="muted-s">? = amount unconfirmed</span></div>
+      <div id="ing-rows">${v.ingredients.map(ingRowHtml).join("")}</div>
+      <button type="button" class="btn" data-act="ing-add">＋ Add ingredient</button></div>
+    <div class="two"><label>Station needed<select name="station"><option value="">None / unknown</option>${stOpts}</select></label>
+      <label class="narrow">Level<input name="stationLevel" type="number" min="1" max="3" value="${v.station ? v.station.level : 1}"></label></div>
+    <label class="check"><input type="checkbox" name="stationGuess" ${v.stationGuess ? "checked" : ""}> Station level is a guess</label>
+    <div class="two"><label>Capability needed<select name="cap"><option value="">None</option>${CAPS.map((c) => `<option value="${c.id}" ${v.cap && v.cap.id === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>
+      <label class="narrow">≥<input name="capMin" type="number" min="1" value="${v.cap ? v.cap.min : 1}"></label></div>
+    <label class="check"><input type="checkbox" name="needsRecipe" ${v.needsRecipe ? "checked" : ""}> Needs the recipe item (found in the world)</label>
+    <label>Task / mission needed (optional)<input name="task" maxlength="120" value="${esc(v.task)}" placeholder="e.g. Artisan – task name"></label>
+    <div class="two"><label>Craft time hours<input name="hours" type="number" min="0" value="${Math.floor((v.time || 0) / 60)}"></label>
+      <label>minutes<input name="minutes" type="number" min="0" max="59" value="${(v.time || 0) % 60}"></label>
+      <label>Power kW<input name="power" type="number" min="0" step="0.5" value="${v.power || 0}"></label></div>
+    <label>Notes<textarea name="notes" rows="2">${esc(v.notes)}</textarea></label>
+    <p class="error" id="form-error"></p>
+    <div class="modal-buttons"><button type="submit" class="btn primary">Save</button><button type="button" class="btn" data-act="modal-close">Cancel</button></div></form>`);
+}
+
+// =============================================================
+// RENDER, TOAST, MODAL
+// =============================================================
+function render() {
+  const [main, sub, a] = route();
+  let title = "GZW Companion", back = "", body = "";
+  if (!main) body = renderHome();
+  else if (main === "hideout") {
+    title = "Hideout"; back = "#/";
+    const tab = sub || "inventory";
+    const active = tab === "station" ? "rooms" : tab === "recipe" ? "crafting" : tab;
+    let inner;
+    if (tab === "inventory") inner = renderInventory();
+    else if (tab === "rooms") { inner = a ? renderRoom(a) : renderRoomsOverview(); if (a) back = "#/hideout/rooms"; }
+    else if (tab === "station") { inner = renderStation(a); back = STATION_BY_ID[a] ? "#/hideout/rooms/" + STATION_BY_ID[a].room : "#/hideout/rooms"; }
+    else if (tab === "crafting") inner = renderCrafting();
+    else if (tab === "recipe") { inner = renderRecipe(a); back = "#/hideout/crafting"; }
+    else inner = comingSoon((HIDEOUT_TABS.find((t) => t.id === tab) || { label: "Not found" }).label);
+    body = renderSubtabs(active) + `<main class="page">${inner}</main>`;
+  } else {
+    const t = MAIN_TABS.find((x) => x.id === main);
+    title = t ? t.label : "Not found"; back = "#/";
+    body = `<main class="page">${comingSoon(title)}</main>`;
+  }
+  document.getElementById("app").innerHTML = `<header class="topbar">${back ? `<a class="back" href="${back}" aria-label="Back">←</a>` : ""}<h1>${esc(title)}</h1><span class="version">v${APP_VERSION}</span></header>${body}`;
+}
+function commit() { saveState(); render(); }
+const snapshot = () => JSON.stringify(state);
+
+const toast = { timer: null, snap: null, key: null, amount: 0 };
+function showToast(msg, snap, key) {
+  toast.snap = snap || null; toast.key = key || null;
+  document.getElementById("toast-root").innerHTML = `<div class="toast"><span>${esc(msg)}</span>${snap ? '<button data-act="undo">Undo</button>' : ""}</div>`;
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(hideToast, 5000);
+}
+function hideToast() { document.getElementById("toast-root").innerHTML = ""; toast.snap = null; toast.key = null; }
+
+let modalOk = null;
+function openModal(html) {
+  document.getElementById("modal-root").innerHTML = `<div class="modal-backdrop" data-act="backdrop"><div class="modal" role="dialog">${html}</div></div>`;
+  const f = document.querySelector("#modal-root input:not([type=checkbox]), #modal-root textarea");
+  if (f && f.focus && !("ontouchstart" in window)) f.focus();
+}
+function closeModal() { document.getElementById("modal-root").innerHTML = ""; modalOk = null; }
+function confirmBox(title, msgHtml, okLabel, fn, danger) {
+  modalOk = fn;
+  openModal(`<div class="modal-body"><h3>${esc(title)}</h3><p class="modal-msg">${msgHtml}</p>
+    <div class="modal-buttons"><button class="btn ${danger ? "danger" : "primary"}" data-act="modal-ok">${esc(okLabel)}</button><button class="btn" data-act="modal-close">Cancel</button></div></div>`);
+}
+
+// =============================================================
+// ACTIONS
+// =============================================================
+function changeCount(id, delta) {
+  const cur = have(id), next = Math.max(0, cur + delta);
+  if (next === cur) return;
+  const key = "count:" + id;
+  const snap = toast.key === key && toast.snap ? toast.snap : snapshot();
+  if (toast.key !== key || !toast.snap) toast.amount = 0;
+  toast.amount += next - cur;
+  setCountRaw(id, next);
+  commit();
+  showToast(`${itemName(id)} ${toast.amount >= 0 ? "+" : "−"}${fmtAmt(id, Math.abs(toast.amount))}`, snap, key);
+}
+function applyOrder(visibleIds) {
+  const order = [...state.order];
+  const pos = visibleIds.map((id) => order.indexOf(id)).filter((p) => p >= 0).sort((a, b) => a - b);
+  pos.forEach((p, i) => (order[p] = visibleIds[i]));
+  state.order = order;
+}
+function doBuild(st) {
+  const i = stationInfo(st); if (i.status === "maxed" || i.missing.length) return;
+  const snap = snapshot();
+  for (const [id, q] of Object.entries(i.next.req)) setCountRaw(id, have(id) - q);
+  state.stationLevels[st.id] = i.cur + 1;
+  commit();
+  showToast(`🔨 Built ${i.next.name} (L${i.cur + 1})`, snap, "build");
+}
+function doCraft(r, n) {
+  const i = recipeInfo(r, n);
+  if (i.incomplete || !i.stationOk || !i.capOk || i.missing.length) return;
+  const snap = snapshot();
+  const used = r.ingredients.map((x) => ({ item: x.item, qty: x.qty * n }));
+  for (const x of used) setCountRaw(x.item, have(x.item) - x.qty);
+  const qty = r.output.qty * n;
+  if (r.time > 0) {
+    const now = Date.now();
+    state.jobs.push({ id: uid(), recipeId: r.id, name: r.name, room: r.room, output: { item: r.output.item, qty }, used, start: now, end: now + r.time * n * 60000 });
+    commit();
+    showToast(`⏱ Started ${r.name} ×${qty} – ready in ${fmtMinutes(r.time * n)}`, snap, "craft");
+  } else {
+    setCountRaw(r.output.item, have(r.output.item) + qty);
+    commit();
+    showToast(`🛠 Crafted ${itemName(r.output.item)} ×${qty}`, snap, "craft");
+  }
+}
+function downloadBackup() {
+  try {
+    const blob = new Blob([backupText()], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "gzw-companion-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    showToast("Backup downloaded. If nothing happened, use Copy backup text.");
+  } catch (e) { ACTIONS["copy-backup"](); }
+}
+function restore(text) {
+  let s;
+  try { s = parseBackup(text); } catch (e) { showToast("⚠️ Couldn't read that backup: " + e.message); return; }
+  confirmBox("Restore backup?", "This replaces everything currently saved in the app.", "Restore", () => {
+    const snap = snapshot(); state = s; commit(); showToast("Backup restored", snap, "restore");
+  }, true);
+}
+
+const ACTIONS = {
+  undo() { if (!toast.snap) return; state = normalize(JSON.parse(toast.snap)); hideToast(); commit(); showToast("Undone"); },
+  backdrop(el, e) { if (e.target === el) closeModal(); },
+  "modal-close": closeModal,
+  "modal-ok"() { const fn = modalOk; closeModal(); if (fn) fn(); },
+  // inventory
+  "toggle-item"(el) { ui.openItem = ui.openItem === el.dataset.id ? null : el.dataset.id; render(); },
+  fav(el) {
+    const id = el.dataset.id, snap = snapshot(), on = state.favorites.includes(id);
+    state.favorites = on ? state.favorites.filter((x) => x !== id) : [...state.favorites, id];
+    commit(); showToast(on ? `Removed ${itemName(id)} from favorites` : `★ ${itemName(id)} moved to Favorites`, snap, "fav");
+  },
+  "inv-cat"(el) { state.prefs.category = el.dataset.v; commit(); },
+  "inv-menu"() { ui.invMenu = !ui.invMenu; render(); },
+  "add-item"() { openItemForm(null); },
+  "edit-item"(el) { openItemForm(el.dataset.id); },
+  "delete-item"(el) {
+    const id = el.dataset.id;
+    confirmBox("Delete material?", `Delete <b>${esc(itemName(id))}</b>? Recipes that use it will show it as a deleted item.`, "Delete", () => {
+      const snap = snapshot();
+      state.customItems = state.customItems.filter((i) => i.id !== id);
+      state.favorites = state.favorites.filter((x) => x !== id);
+      state.order = state.order.filter((x) => x !== id);
+      delete state.counts[id];
+      commit(); showToast("Material deleted", snap, "del");
+    }, true);
+  },
+  export: downloadBackup,
+  import() { const f = document.getElementById("import-file"); f.value = ""; f.click(); },
+  "copy-backup"() {
+    openModal(`<div class="modal-body"><h3>Backup text</h3><p class="muted-s">Copy all of this and keep it somewhere safe (notes app, email to yourself).</p>
+      <textarea id="backup-text" rows="8" readonly>${esc(backupText())}</textarea>
+      <div class="modal-buttons"><button class="btn primary" data-act="copy-now">📋 Copy</button><button class="btn" data-act="modal-close">Close</button></div></div>`);
+  },
+  "copy-now"() {
+    const t = document.getElementById("backup-text"); t.select();
+    const done = () => showToast("Copied to clipboard");
+    if (navigator.clipboard) navigator.clipboard.writeText(t.value).then(done, () => { document.execCommand("copy"); done(); });
+    else { document.execCommand("copy"); done(); }
+  },
+  "paste-backup"() {
+    openModal(`<form data-form="import" class="modal-body"><h3>Paste backup text</h3><textarea name="text" rows="8" required placeholder="Paste here..."></textarea>
+      <div class="modal-buttons"><button type="submit" class="btn primary">Restore</button><button type="button" class="btn" data-act="modal-close">Cancel</button></div></form>`);
+  },
+  reset() {
+    confirmBox("Reset for wipe?", "Sets every item count to 0, every station to level 0, clears active crafts and recipe/task ticks. Favorites, order, custom items and custom recipes are kept.", "Reset", () => {
+      const snap = snapshot();
+      state.counts = {}; state.stationLevels = {}; state.jobs = []; state.recipeFlags = {};
+      commit(); showToast("Reset done", snap, "reset");
+    }, true);
+  },
+  // rooms
+  "hide-banner"() { state.prefs.hideBanner = true; commit(); },
+  "room-filter"(el) { state.prefs.roomFilter = el.dataset.v; commit(); },
+  "pin-station"(el) {
+    const id = el.dataset.id, on = state.pins.includes(id);
+    state.pins = on ? state.pins.filter((x) => x !== id) : [...state.pins, id];
+    commit(); showToast(on ? "Unpinned" : "📌 Pinned – shows in Inventory → Need: Pinned only");
+  },
+  "shopping-list"() { state.prefs.needMode = "pinned"; state.prefs.neededOnly = true; state.prefs.category = "all"; ui.invQuery = ""; saveState(); location.hash = "#/hideout/inventory"; },
+  build(el) {
+    const st = STATION_BY_ID[el.dataset.id]; if (!st) return;
+    const i = stationInfo(st); if (i.status === "maxed" || i.missing.length) return;
+    const warns = [];
+    if (i.unmet.length) warns.push("Requirement not met: " + i.unmet.map((u) => `${esc(capName(u.id))} ≥ ${u.min} (you: ${u.have})`).join(", "));
+    if (i.powerOver) warns.push(`Power would be ${i.after} / ${i.made} kW.`);
+    if (warns.length) confirmBox("Build anyway?", warns.join("<br>") + "<br><br>The data is unconfirmed, so you can still build.", "Build anyway", () => doBuild(st));
+    else doBuild(st);
+  },
+  "set-level"(el) {
+    const st = STATION_BY_ID[el.dataset.id], sel = document.getElementById("set-level"); if (!st || !sel) return;
+    const n = clamp(int(sel.value), 0, st.levels.length), snap = snapshot();
+    if (n) state.stationLevels[st.id] = n; else delete state.stationLevels[st.id];
+    commit(); showToast(`${st.name} set to Level ${n}`, snap, "setlvl");
+  },
+  // crafting
+  "hide-craft-note"() { state.prefs.hideCraftNote = true; commit(); },
+  "craft-room"(el) { state.prefs.craftRoom = el.dataset.v; commit(); },
+  "craft-status"(el) { state.prefs.craftStatus = el.dataset.v; commit(); },
+  "craft-n"(el) { const id = el.dataset.id; ui.craftN[id] = clamp((ui.craftN[id] || 1) + int(el.dataset.d), 1, 99); render(); },
+  "pin-recipe"(el) {
+    const id = el.dataset.id, on = !!state.recipePins[id];
+    if (on) delete state.recipePins[id]; else state.recipePins[id] = ui.craftN[id] || 1;
+    commit(); showToast(on ? "Unpinned" : "📌 Ingredients added to your Inventory “need” numbers");
+  },
+  "pin-qty"(el) {
+    const id = el.dataset.id, n = clamp((state.recipePins[id] || 1) + int(el.dataset.d), 0, 99);
+    if (n) state.recipePins[id] = n; else delete state.recipePins[id];
+    commit();
+  },
+  craft(el) {
+    const r = getRecipe(el.dataset.id); if (!r) return;
+    const n = ui.craftN[r.id] || 1, i = recipeInfo(r, n);
+    if (i.incomplete || !i.stationOk || !i.capOk || i.missing.length) return;
+    const warns = [];
+    if (!i.foundOk) warns.push("You haven't ticked “recipe found”.");
+    if (!i.taskOk) warns.push("You haven't ticked the task: " + esc(r.task));
+    if (i.powerOver) warns.push(`Needs ${r.power} kW, you have ${i.spare} kW spare.`);
+    if (warns.length) confirmBox("Craft anyway?", warns.join("<br>"), "Craft anyway", () => doCraft(r, n));
+    else doCraft(r, n);
+  },
+  collect(el) {
+    const j = state.jobs.find((x) => x.id === el.dataset.id); if (!j || j.end > Date.now()) return;
+    const snap = snapshot();
+    setCountRaw(j.output.item, have(j.output.item) + j.output.qty);
+    state.jobs = state.jobs.filter((x) => x.id !== j.id);
+    commit(); showToast(`Collected ${itemName(j.output.item)} ×${j.output.qty}`, snap, "collect");
+  },
+  "cancel-job"(el) {
+    const j = state.jobs.find((x) => x.id === el.dataset.id); if (!j) return;
+    confirmBox("Cancel craft?", `Cancel ${esc(j.name)}? The ingredients go back to your Inventory.`, "Cancel craft", () => {
+      const snap = snapshot();
+      for (const x of j.used) setCountRaw(x.item, have(x.item) + x.qty);
+      state.jobs = state.jobs.filter((x) => x.id !== j.id);
+      commit(); showToast("Craft cancelled, ingredients returned", snap, "cancel");
+    }, true);
+  },
+  "add-recipe"() { openRecipeForm(null); },
+  "edit-recipe"(el) { openRecipeForm(el.dataset.id); },
+  "reset-recipe"(el) {
+    const id = el.dataset.id;
+    confirmBox("Reset recipe?", "Your edits to this recipe will be removed and the app's default data comes back.", "Reset", () => {
+      const snap = snapshot(); delete state.recipeOverrides[id]; commit(); showToast("Recipe reset to default", snap, "rreset");
+    }, true);
+  },
+  "delete-recipe"(el) {
+    const id = el.dataset.id;
+    confirmBox("Delete recipe?", "This custom recipe will be deleted.", "Delete", () => {
+      const snap = snapshot();
+      state.customRecipes = state.customRecipes.filter((r) => r.id !== id);
+      delete state.recipePins[id]; delete state.recipeFlags[id];
+      state.jobs = state.jobs.filter((j) => j.recipeId !== id || j.end <= Date.now());
+      saveState(); location.hash = "#/hideout/crafting"; render(); showToast("Recipe deleted", snap, "rdel");
+    }, true);
+  },
+  "ing-add"() { document.getElementById("ing-rows").insertAdjacentHTML("beforeend", ingRowHtml(null)); },
+  "ing-remove"(el) { el.closest(".ing-row").remove(); },
+};
+
+// =============================================================
+// EVENT WIRING
+// =============================================================
+const app = document.getElementById("app");
+let suppressClick = false;
+document.addEventListener("click", (e) => {
+  if (suppressClick) { suppressClick = false; e.preventDefault(); return; }
+  const el = e.target.closest("[data-act]");
+  if (!el || el.disabled) return;
+  const fn = ACTIONS[el.dataset.act];
+  if (!fn) return;
+  if (el.tagName === "A" || el.tagName === "BUTTON") e.preventDefault();
+  fn(el, e);
+});
+
+// + / − with hold-to-repeat (hold = steps of 5, then 10)
+let hold = null;
+function stopHold() { if (hold) { clearTimeout(hold.t); clearInterval(hold.i); hold = null; } }
+document.addEventListener("pointerdown", (e) => {
+  const b = e.target.closest(".step"); if (!b) return;
+  e.preventDefault();
+  const id = b.dataset.id, dir = int(b.dataset.step), item = getItem(id), step = (item && item.step) || 1;
+  changeCount(id, dir * step);
+  let ticks = 0;
+  hold = { t: setTimeout(() => { hold.i = setInterval(() => { ticks++; changeCount(id, dir * step * (ticks > 10 ? 10 : 5)); }, 180); }, 500) };
+});
+["pointerup", "pointercancel", "pointerleave"].forEach((ev) => document.addEventListener(ev, stopHold));
+document.addEventListener("click", (e) => { if (e.target.closest(".step")) e.preventDefault(); }, true);
+
+// Typed counts, search boxes
+document.addEventListener("input", (e) => {
+  const t = e.target;
+  if (t.dataset.input === "inv-search") { ui.invQuery = t.value; document.getElementById("inv-list").innerHTML = renderInvList(); }
+  if (t.dataset.input === "craft-search") { ui.craftQuery = t.value; document.getElementById("craft-list").innerHTML = renderCraftList(); }
+});
+document.addEventListener("focusin", (e) => { if (e.target.matches(".count")) setTimeout(() => e.target.select(), 0); });
+document.addEventListener("keydown", (e) => {
+  if (e.target.matches(".count") && e.key === "Enter") e.target.blur();
+  if (e.key === "Escape") closeModal();
+});
+document.addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.dataset.count) {
+    const id = t.dataset.count, val = Math.max(0, int(String(t.value).replace(/[^0-9]/g, "")));
+    if (val !== have(id)) changeCount(id, val - have(id)); else t.value = have(id);
+    return;
+  }
+  const c = t.dataset.change;
+  if (c === "inv-sort") { state.prefs.sort = t.value; commit(); }
+  else if (c === "inv-need") { state.prefs.needMode = t.value; commit(); }
+  else if (c === "inv-needed") { state.prefs.neededOnly = t.checked; commit(); }
+  else if (c === "flag") {
+    const f = state.recipeFlags[t.dataset.id] || { found: false, task: false };
+    f[t.dataset.flag] = t.checked; state.recipeFlags[t.dataset.id] = f; commit();
+  } else if (c === "output-select") {
+    document.getElementById("new-output").hidden = t.value !== "__new";
+  }
+});
+document.getElementById("import-file").addEventListener("change", (e) => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const rd = new FileReader(); rd.onload = () => restore(String(rd.result)); rd.readAsText(f);
+});
+
+// Forms
+function formError(msg) { const el = document.getElementById("form-error"); if (el) el.textContent = msg; }
+function newItemId(name) {
+  let base = "custom-" + (slug(name) || "item"), id = base, n = 2;
+  while (getItem(id)) id = base + "-" + n++;
+  return id;
+}
+function nameTaken(name, exceptId) {
+  const s = slug(name);
+  return allItems().some((i) => i.id !== exceptId && slug(i.name) === s);
+}
+document.addEventListener("submit", (e) => {
+  const f = e.target, kind = f.dataset.form; if (!kind) return;
+  e.preventDefault();
+  const fd = new FormData(f), g = (k) => String(fd.get(k) || "").trim();
+  if (kind === "import") { closeModal(); restore(g("text")); return; }
+  if (kind === "item") {
+    const name = g("name"), editId = f.dataset.id;
+    if (!name) return formError("Please enter a name.");
+    if (nameTaken(name, editId)) return formError("An item with this name already exists.");
+    const snap = snapshot();
+    const data = cleanItem({ id: editId || newItemId(name), name, category: g("category"), image: g("image"), info: g("info"), step: g("step") });
+    if (editId) state.customItems = state.customItems.map((i) => (i.id === editId ? data : i));
+    else { state.customItems.push(data); state.order.push(data.id); }
+    closeModal(); commit(); showToast(editId ? "Material updated" : `Added ${name}`, snap, "item");
+    return;
+  }
+  if (kind === "recipe") {
+    const name = g("name"); if (!name) return formError("Please enter a recipe name.");
+    const snap = snapshot();
+    let outItem = g("output");
+    if (outItem === "__new") {
+      const on = g("newOutput") || name;
+      const existing = allItems().find((i) => slug(i.name) === slug(on));
+      if (existing) outItem = existing.id;
+      else {
+        const it = cleanItem({ id: newItemId(on), name: on, category: "crafted", info: "Made by: " + name });
+        state.customItems.push(it); state.order.push(it.id); outItem = it.id;
+      }
+    }
+    const ings = [], seen = new Set();
+    f.querySelectorAll(".ing-row").forEach((row) => {
+      const item = row.querySelector(".ing-item").value; if (!item) return;
+      const qty = Math.max(1, int(row.querySelector(".ing-qty").value) || 1), unsure = row.querySelector(".ing-unsure").checked;
+      if (seen.has(item)) { ings.find((x) => x.item === item).qty += qty; return; }
+      seen.add(item); ings.push({ item, qty, unsure });
+    });
+    if (ings.some((x) => x.item === outItem)) return formError("A recipe can't use the item it makes.");
+    const stId = g("station"), capId = g("cap"), kindR = f.dataset.kind;
+    const id = kindR === "new" ? "custom-recipe-" + uid() : f.dataset.id;
+    const base = kindR === "builtin" ? BUILT_IN_RECIPE_BY_ID[id] : null;
+    const rec = cleanRecipe({
+      id, name, room: g("room"), output: { item: outItem, qty: g("outQty") }, ingredients: ings,
+      station: stId ? { id: stId, level: g("stationLevel") } : null, stationGuess: fd.get("stationGuess") === "on",
+      cap: capId ? { id: capId, min: g("capMin") } : null, needsRecipe: fd.get("needsRecipe") === "on", task: g("task"),
+      power: g("power"), time: int(g("hours")) * 60 + clamp(int(g("minutes")), 0, 59), notes: g("notes"), source: base ? base.source : "Added by you",
+    });
+    if (kindR === "builtin") state.recipeOverrides[id] = rec;
+    else if (kindR === "custom") state.customRecipes = state.customRecipes.map((r) => (r.id === id ? rec : r));
+    else state.customRecipes.push(rec);
+    closeModal(); saveState();
+    if (location.hash !== "#/hideout/recipe/" + encodeURIComponent(id)) location.hash = "#/hideout/recipe/" + encodeURIComponent(id);
+    render(); showToast(kindR === "new" ? `Added recipe ${name}` : "Recipe saved", snap, "recipe");
+  }
+});
+
+// Drag to reorder (by the ≡ handle, works with touch and mouse)
+let drag = null;
+document.addEventListener("pointerdown", (e) => {
+  const h = e.target.closest("[data-handle]"); if (!h) return;
+  e.preventDefault();
+  const row = h.closest(".row"), list = row.parentElement;
+  drag = { row, list, y: e.clientY, moved: false };
+  row.classList.add("dragging"); document.body.classList.add("is-dragging");
+  try { h.setPointerCapture(e.pointerId); } catch (_) {}
+});
+document.addEventListener("pointermove", (e) => {
+  if (!drag) return;
+  e.preventDefault();
+  const rows = [...drag.list.children].filter((r) => r !== drag.row);
+  let before = null;
+  for (const r of rows) { const b = r.getBoundingClientRect(); if (e.clientY < b.top + b.height / 2) { before = r; break; } }
+  if (before !== drag.row.nextElementSibling) { drag.list.insertBefore(drag.row, before); drag.moved = true; }
+  if (e.clientY < 60) window.scrollBy(0, -12); else if (e.clientY > window.innerHeight - 60) window.scrollBy(0, 12);
+}, { passive: false });
+function endDrag() {
+  if (!drag) return;
+  const { row, list, moved } = drag; drag = null;
+  row.classList.remove("dragging"); document.body.classList.remove("is-dragging");
+  if (moved) {
+    const snap = snapshot();
+    applyOrder([...list.children].map((r) => r.dataset.id));
+    commit(); showToast("Order saved", snap, "order");
+  }
+}
+document.addEventListener("pointerup", endDrag);
+document.addEventListener("pointercancel", endDrag);
+
+// Timers: update countdowns every second, refresh when a craft finishes
+let lastReady = readyJobs();
+setInterval(() => {
+  const now = Date.now();
+  document.querySelectorAll("[data-end]").forEach((el) => (el.textContent = fmtDur(int(el.dataset.end) - now)));
+  document.querySelectorAll("[data-collect]").forEach((el) => (el.disabled = int(el.dataset.collect) > now));
+  const r = readyJobs();
+  if (r !== lastReady) { lastReady = r; if (r && !document.querySelector("#modal-root .modal")) { render(); showToast("⏱ A craft is ready to collect"); } }
+}, 1000);
+
+window.addEventListener("hashchange", () => { ui.openItem = null; stopHold(); render(); window.scrollTo(0, 0); });
+window.addEventListener("storage", (e) => { if (e.key === STORAGE_KEY) { state = loadState(); render(); } });
+render();
+</script>
+<script>
+// =============================================================
+// DISASSEMBLY (added in 0.1.4)
+// =============================================================
+(() => {
+"use strict";
+const DIS_DEFAULT_MIN = 720; // 12 hours
+
+// ---------- New inventory categories & items ----------
+const otherAt = CATEGORIES.findIndex((c) => c.id === "other");
+CATEGORIES.splice(otherAt < 0 ? CATEGORIES.length : otherAt, 0,
+  { id: "disassembly", label: "Disassemble" }, { id: "intel", label: "Intel & Canisters" });
+
+const IN_INFO = "Disassemble in the Electronics Workshop (~12 h)";
+const OUT_INFO = "From disassembly · likely a sell / smuggling item";
+const NEW_ITEMS = [
+  ["Artillery Ballistic Calculator", "disassembly", IN_INFO], ["Baget-53-31 Onboard Computer", "disassembly", IN_INFO],
+  ["Chemical Munitions Container", "disassembly", IN_INFO], ["Counter IED/Jammer Unit", "disassembly", IN_INFO],
+  ["Drone Interceptor", "disassembly", IN_INFO], ["IMSI Catcher", "disassembly", IN_INFO],
+  ["Last Line Defense Container", "disassembly", IN_INFO], ["Manpack Tactical Radio", "disassembly", IN_INFO],
+  ["Chemical Containment Container", "disassembly", IN_INFO], ["Portable SATCOM Terminal", "disassembly", IN_INFO],
+  ["Radar Signal Processor", "disassembly", IN_INFO], ["Missile Seeker Head", "disassembly", IN_INFO],
+  ["ST1122 Storage Computer", "disassembly", IN_INFO], ["Radioisotope Fuel Cell", "disassembly", IN_INFO],
+  ["UNLRA Field Terminal", "disassembly", IN_INFO],
+  ["LAF Artillery Data Logs", "intel", OUT_INFO], ["Flight Data Drive", "intel", OUT_INFO], ["Sarin Canister", "intel", OUT_INFO],
+  ["Electronic Warfare Configuration Drive", "intel", OUT_INFO], ["AI Targeting Module", "intel", OUT_INFO],
+  ["Incriminating Phone Logs", "intel", OUT_INFO], ["Nerve Gas Canister", "intel", OUT_INFO], ["Encryption Key Drive", "intel", OUT_INFO],
+  ["Biohazard Canister", "intel", OUT_INFO], ["Uplink Credentials Drive", "intel", OUT_INFO],
+  ["Deep-Space Observation Data Drive", "intel", OUT_INFO], ["Missile Guidance Circuit", "intel", OUT_INFO],
+  ["Incriminating Data Drive", "intel", OUT_INFO], ["Plutonium Canister", "intel", OUT_INFO], ["UNLRA Relief Manifest", "intel", OUT_INFO],
+];
+for (const [name, category, info] of NEW_ITEMS) {
+  const id = slug(name);
+  if (BUILT_IN_BY_ID[id]) continue;
+  const it = { id, name, category, step: 1, image: "", info };
+  BUILT_IN_ITEMS.push(it); BUILT_IN_BY_ID[id] = it;
+}
+
+// ---------- Disassembly data (edit here after game patches) ----------
+// [ item you disassemble, [ [output, amount], ... ], notes ]
+const RAW_DIS = [
+  ["Artillery Ballistic Calculator", [["LAF Artillery Data Logs", 1], ["CPU Card", 1]], "One source says the Artillery Ballistic Computer gives a CPU Card (needed for the Basic Hacking Tool). Not confirmed – check in-game."],
+  ["Baget-53-31 Onboard Computer", [["Flight Data Drive", 1], ["Avionics Processor Board", 1]]],
+  ["Chemical Munitions Container", [["Sarin Canister", 1]]],
+  ["Counter IED/Jammer Unit", [["Electronic Warfare Configuration Drive", 1], ["Digital Synthesis Engine", 1]]],
+  ["Drone Interceptor", [["AI Targeting Module", 1]]],
+  ["IMSI Catcher", [["Incriminating Phone Logs", 1], ["Spoofing ASIC Module", 1]]],
+  ["Last Line Defense Container", [["Nerve Gas Canister", 1]]],
+  ["Manpack Tactical Radio", [["Encryption Key Drive", 1], ["FPGA Module", 1]]],
+  ["Chemical Containment Container", [["Biohazard Canister", 1]]],
+  ["Portable SATCOM Terminal", [["Uplink Credentials Drive", 1], ["Oven-Controlled Crystal Oscillator", 1]]],
+  ["Radar Signal Processor", [["Deep-Space Observation Data Drive", 1], ["High-Speed Digital Processor Board", 1]]],
+  ["Missile Seeker Head", [["Missile Guidance Circuit", 1]]],
+  ["ST1122 Storage Computer", [["Incriminating Data Drive", 1], ["Server RAM Module", 1]]],
+  ["Radioisotope Fuel Cell", [["Plutonium Canister", 1]]],
+  ["UNLRA Field Terminal", [["UNLRA Relief Manifest", 1], ["Multi-Bus Converter", 1]]],
+];
+const DIS_BUILT_IN = RAW_DIS.map(([input, outs, notes]) => ({
+  id: "dis-" + slug(input), input: slug(input),
+  outputs: outs.map(([n, q]) => {
+    if (!BUILT_IN_BY_ID[slug(n)]) console.warn("Unknown disassembly output: " + n);
+    return { item: slug(n), qty: q, unsure: true };
+  }),
+  time: DIS_DEFAULT_MIN, station: null, notes: notes || "", source: "grayzonewarfaregame.wiki",
+}));
+const DIS_BY_ID = Object.fromEntries(DIS_BUILT_IN.map((r) => [r.id, r]));
+
+function cleanDis(r) {
+  if (!isObj(r) || !r.id || !r.input) return null;
+  const st = isObj(r.station) && STATION_BY_ID[r.station.id] ? STATION_BY_ID[r.station.id] : null;
+  return {
+    id: String(r.id), input: String(r.input),
+    outputs: arr(r.outputs).filter((x) => isObj(x) && x.item).map((x) => ({ item: String(x.item), qty: Math.max(1, int(x.qty) || 1), unsure: !!x.unsure })),
+    time: Math.max(1, Math.round(Number(r.time) || DIS_DEFAULT_MIN)),
+    station: st ? { id: st.id, level: clamp(int(r.station.level) || 1, 1, st.levels.length) } : null,
+    notes: String(r.notes || "").slice(0, 600), source: String(r.source || "").slice(0, 120),
+  };
+}
+
+// ---------- Saving: keep disassembly data when the app cleans the save ----------
+const baseNormalize = normalize;
+normalize = function (raw) {
+  const s = baseNormalize(raw), r = isObj(raw) ? raw : {};
+  s.disCustom = arr(r.disCustom).map(cleanDis).filter((x) => x && !DIS_BY_ID[x.id]);
+  s.disOverrides = {};
+  for (const [id, v] of Object.entries(isObj(r.disOverrides) ? r.disOverrides : {})) {
+    if (!DIS_BY_ID[id]) continue;
+    const c = cleanDis({ ...v, id }); if (c) s.disOverrides[id] = c;
+  }
+  s.disQueue = arr(r.disQueue).filter((q) => isObj(q) && q.id && q.input).map((q) => ({
+    id: String(q.id), recipeId: String(q.recipeId || ""), input: String(q.input),
+    outputs: arr(q.outputs).filter((x) => isObj(x) && x.item).map((x) => ({ item: String(x.item), qty: Math.max(1, int(x.qty) || 1) })),
+    dur: Math.max(60000, Number(q.dur) || DIS_DEFAULT_MIN * 60000),
+    added: Number(q.added) || Date.now(),
+    start: q.start != null && Number.isFinite(Number(q.start)) ? Number(q.start) : null,
+  }));
+  s.prefs.disSlots = clamp(int(s.prefs.disSlots) || 1, 1, 6);
+  if (!["all", "have", "pinned", "custom"].includes(s.prefs.disFilter)) s.prefs.disFilter = "all";
+  s.prefs.hideDisNote = !!s.prefs.hideDisNote;
+  return s;
+};
+state = loadState(); // reload so the new items and disassembly data are kept
+
+// ---------- Logic ----------
+const disAll = () => [
+  ...DIS_BUILT_IN.map((r) => (state.disOverrides[r.id] ? { ...state.disOverrides[r.id], builtIn: true, edited: true } : { ...r, builtIn: true, edited: false })),
+  ...state.disCustom.map((r) => ({ ...r, custom: true })),
+];
+const disGet = (id) => disAll().find((r) => r.id === id) || null;
+const disStationOk = (r) => !r.station || lvl(r.station.id) >= r.station.level;
+const disSourcesOf = (itemId) => disAll().filter((r) => r.outputs.some((o) => o.item === itemId));
+const disEnd = (q) => (q.start != null ? q.start + q.dur : null);
+const disReadyCount = (now = Date.now()) => state.disQueue.filter((q) => q.start != null && q.start + q.dur <= now).length;
+
+// Starts waiting items in queue order whenever a slot is free (also catches up after being offline)
+function disAdvance(now = Date.now(), queue = state.disQueue) {
+  const slots = state.prefs.disSlots || 1;
+  const ends = queue.filter((q) => q.start != null).map((q) => q.start + q.dur);
+  let prev = -Infinity, changed = false;
+  for (const q of queue) {
+    if (q.start != null) continue;
+    const t0 = Math.max(q.added, prev);
+    const cands = [t0, ...ends.filter((e) => e > t0)].sort((a, b) => a - b);
+    let t = null;
+    for (const c of cands) if (ends.filter((e) => e > c).length < slots) { t = c; break; }
+    if (t == null || t > now) break;
+    q.start = t; ends.push(t + q.dur); prev = t; changed = true;
+  }
+  return changed;
+}
+// Waiting items may not start earlier than "now" after a slot is freed by hand
+function bumpWaiting(now = Date.now()) { for (const q of state.disQueue) if (q.start == null) q.added = Math.max(q.added, now); }
+function disEstimate() {
+  const copy = state.disQueue.map((q) => ({ ...q }));
+  disAdvance(Infinity, copy);
+  return Object.fromEntries(copy.map((q) => [q.id, q.start]));
+}
+function disAdd(r, n) {
+  n = Math.max(1, int(n));
+  if (!r || !disStationOk(r) || have(r.input) < n || !r.outputs.length) return;
+  const snap = snapshot(), now = Date.now();
+  setCountRaw(r.input, have(r.input) - n);
+  for (let k = 0; k < n; k++) {
+    state.disQueue.push({ id: uid() + k, recipeId: r.id, input: r.input, outputs: r.outputs.map((o) => ({ item: o.item, qty: o.qty })), dur: r.time * 60000, added: now, start: null });
+  }
+  disAdvance(now); ui.disN[r.id] = 1; commit();
+  showToast(`🔩 Queued ${itemName(r.input)} ×${n}`, snap, "disadd");
+}
+function disCollect(ids) {
+  const now = Date.now(), done = state.disQueue.filter((q) => ids.includes(q.id) && disEnd(q) != null && disEnd(q) <= now);
+  if (!done.length) return;
+  const snap = snapshot(), got = {};
+  for (const q of done) for (const o of q.outputs) { setCountRaw(o.item, have(o.item) + o.qty); got[o.item] = (got[o.item] || 0) + o.qty; }
+  const doneIds = new Set(done.map((q) => q.id));
+  state.disQueue = state.disQueue.filter((q) => !doneIds.has(q.id));
+  commit();
+  showToast("Collected: " + Object.entries(got).map(([id, n]) => `${itemName(id)} ×${n}`).join(", "), snap, "discollect");
+}
+
+// ---------- Screens ----------
+ui.disN = {}; ui.disQuery = "";
+const disName = (r) => itemName(r.input);
+const disTags = (r) => (r.custom ? '<span class="tag">Custom</span>' : "") + (r.edited ? '<span class="tag">Edited</span>' : "");
+const outText = (r) => r.outputs.map((o) => `${esc(itemName(o.item))} ×${o.qty}${o.unsure ? "?" : ""}`).join(" + ") || "no outputs set";
+
+function disQueueCard(recipeId) {
+  const now = Date.now(), q = state.disQueue;
+  const shown = q.map((e, idx) => ({ e, idx })).filter(({ e }) => !recipeId || e.recipeId === recipeId);
+  if (!shown.length) return recipeId ? "" : `<div class="card"><h3>🔩 Disassembly queue</h3><p class="muted-s">Nothing is being disassembled. Pick an item below and tap “＋ Queue”.</p></div>`;
+  const est = disEstimate(), ready = q.filter((e) => disEnd(e) != null && disEnd(e) <= now).length;
+  return `<div class="card"><div class="summary-row"><h3>🔩 ${recipeId ? "In the queue" : "Disassembly queue"} (${shown.length})</h3>
+    ${ready && !recipeId ? `<button class="btn primary" data-act="dis-collect-all">Collect all (${ready})</button>` : ""}</div>
+    ${shown.map(({ e, idx }) => {
+      const end = disEnd(e), done = end != null && end <= now, running = end != null && !done;
+      const estEnd = est[e.id] != null ? est[e.id] + e.dur : now;
+      const status = done ? "✅ Ready to collect"
+        : running ? `⏱ <span data-end="${end}">${fmtDur(end - now)}</span> left`
+        : `⏳ Waiting · ready in ≈ <span data-end="${estEnd}">${fmtDur(estEnd - now)}</span>`;
+      return `<div class="job">
+        ${recipeId ? "" : `<div class="q-arrows"><button class="btn" data-act="dis-move" data-id="${esc(e.id)}" data-d="-1" ${done || idx === 0 ? "disabled" : ""} aria-label="Move up">▲</button><button class="btn" data-act="dis-move" data-id="${esc(e.id)}" data-d="1" ${done || idx === q.length - 1 ? "disabled" : ""} aria-label="Move down">▼</button></div>`}
+        <div class="job-main"><b>${idx + 1}. ${esc(itemName(e.input))}</b>
+          <span class="muted-s">→ ${e.outputs.map((o) => `${esc(itemName(o.item))} ×${o.qty}`).join(" + ")}</span>
+          <span class="muted-s">${status}</span>${running ? bar(now - e.start, e.dur) : ""}</div>
+        <button class="btn primary" data-act="dis-collect" data-id="${esc(e.id)}" ${end != null ? `data-collect="${end}"` : ""} ${done ? "" : "disabled"}>Collect</button>
+        ${done ? "" : `<button class="btn" data-act="dis-cancel" data-id="${esc(e.id)}" aria-label="Remove">✕</button>`}
+      </div>`;
+    }).join("")}</div>`;
+}
+function disVisible() {
+  const f = state.prefs.disFilter, pin = computeNeeds("pinned");
+  return disAll().filter((r) => {
+    if (f === "have" && have(r.input) < 1) return false;
+    if (f === "custom" && !r.custom && !r.edited) return false;
+    if (f === "pinned" && !r.outputs.some((o) => (pin[o.item] || 0) > have(o.item))) return false;
+    if (ui.disQuery && !fuzzy(ui.disQuery, disName(r)) && !r.outputs.some((o) => fuzzy(ui.disQuery, itemName(o.item)))) return false;
+    return true;
+  }).sort((a, b) => (have(b.input) > 0) - (have(a.input) > 0) || disName(a).localeCompare(disName(b)));
+}
+function disCard(r) {
+  const h = have(r.input), stOk = disStationOk(r), pin = computeNeeds("pinned");
+  const useful = r.outputs.filter((o) => (pin[o.item] || 0) > have(o.item));
+  const cls = !stOk ? "locked" : h > 0 ? "craftable" : "incomplete";
+  const label = !stOk ? "🔒 Locked" : h > 0 ? `🟢 You have ${h}` : "⚪ None in inventory";
+  return `<a class="card station-card ${cls}" href="#/hideout/dis/${encodeURIComponent(r.id)}">
+    <div class="sc-top"><span class="sc-name">${esc(disName(r))}${disTags(r)}</span><span class="badge ${cls}">${label}</span></div>
+    <div class="sc-sub">→ ${outText(r)} · ⏱ ${fmtMinutes(r.time)}</div>
+    ${!stOk ? `<div class="sc-sub">❌ Needs ${esc(STATION_BY_ID[r.station.id].name)} L${r.station.level}</div>` : ""}
+    ${useful.length ? `<div class="sc-sub">📌 Gives ${useful.map((o) => esc(itemName(o.item))).join(", ")} for your pinned goals</div>` : ""}
+    ${stOk && h > 0 ? `<div class="inline"><button class="btn" data-act="dis-add" data-id="${esc(r.id)}" data-n="1">＋ Queue 1</button></div>` : ""}
+  </a>`;
+}
+function renderDisList() {
+  const list = disVisible();
+  return list.length ? list.map(disCard).join("") : `<div class="empty">No items match.</div>`;
+}
+function renderDisassembly() {
+  const p = state.prefs;
+  return `${!p.hideDisNote ? `<div class="banner"><div>🔩 <b>How disassembly works:</b> it runs in the Electronics Workshop, takes about 12 h per item and keeps going while you're offline. Items closest to the top-left of the grid go first, and moving an item resets its timer. Results go to Workshop storage – tap <b>Collect</b> when you take them out. Output amounts are unconfirmed (×1?).</div><button class="x" data-act="dis-hide-note" aria-label="Hide">✕</button></div>` : ""}
+  ${disQueueCard()}
+  <div class="card"><div class="summary-row"><span>Items disassembled at the same time</span>
+    <select data-change="dis-slots">${[1, 2, 3, 4, 5, 6].map((n) => `<option value="${n}" ${p.disSlots === n ? "selected" : ""}>${n}</option>`).join("")}</select></div>
+    <p class="muted-s">Not confirmed. Leave at 1 (one after another) unless you see otherwise in-game.</p></div>
+  <div class="toolbar">
+    <div class="toolbar-row"><input class="search" id="dis-search" data-input="dis-search" type="search" placeholder="🔍 Search items or parts..." value="${esc(ui.disQuery)}">
+      <button class="btn primary" data-act="dis-add-recipe">＋ Add item</button></div>
+    <div class="chips">${[["all", "All"], ["have", "🟢 In inventory"], ["pinned", "📌 For pinned goals"], ["custom", "Custom / edited"]].map(([v, l]) => chip("dis-filter", v, p.disFilter, l)).join("")}</div>
+  </div>
+  <div id="dis-list">${renderDisList()}</div>`;
+}
+function renderDisRecipe(id) {
+  const r = disGet(id);
+  if (!r) return `<div class="empty">Item not found. <a href="#/hideout/disassembly">Back to disassembly</a></div>`;
+  const n = ui.disN[r.id] || 1, h = have(r.input), stOk = disStationOk(r);
+  const st = r.station ? STATION_BY_ID[r.station.id] : null;
+  const can = stOk && h >= n && r.outputs.length > 0;
+  return `<a class="crumb" href="#/hideout/disassembly">← Disassembly</a>
+  <div class="card"><div class="sd-head"><div><h2>${esc(disName(r))}${disTags(r)}</h2>
+    <div class="muted-s">🔧 Electronics Workshop · ⏱ ${fmtMinutes(r.time)} each</div></div></div>
+    <ul class="req">
+      ${st ? `<li>${ok(stOk)} <a href="#/hideout/station/${st.id}">${esc(st.name)}</a> Level ≥ ${r.station.level} (you: ${lvl(st.id)})</li>` : `<li>❔ Station requirement unknown</li>`}
+      ${n > 1 ? `<li>⏱ ×${n} takes about ${fmtMinutes(r.time * Math.ceil(n / (state.prefs.disSlots || 1)))} in total</li>` : ""}
+    </ul>
+    <h3>You put in</h3><div class="mat-list">${matRow(r.input, n)}</div>
+    <h3 style="margin-top:10px">You get${n > 1 ? " (total)" : ""}</h3>
+    <div class="mat-list">${r.outputs.length ? r.outputs.map((o) => matRow(o.item, 0, `<span class="muted-s">+${o.qty * n} when collected${o.unsure ? " · amount unconfirmed" : ""}</span>`)).join("") : `<p class="hint">No outputs set. Tap Edit to add them.</p>`}</div>
+    <div class="summary-row" style="margin-top:10px"><span class="stepper">Amount <button class="btn" data-act="dis-n" data-id="${esc(r.id)}" data-d="-1">−</button><b>×${n}</b><button class="btn" data-act="dis-n" data-id="${esc(r.id)}" data-d="1">+</button></span>
+      ${h > 1 ? `<button class="btn" data-act="dis-all" data-id="${esc(r.id)}">Use all (${h})</button>` : ""}</div>
+    <div id="build-area"><button class="btn primary build-btn" data-act="dis-add" data-id="${esc(r.id)}" ${can ? "" : "disabled"}>🔩 Add to queue${n > 1 ? " ×" + n : ""}</button>
+      ${!stOk ? `<p class="build-warn">🔒 Build ${esc(st.name)} to Level ${r.station.level} first.</p>` : ""}
+      ${stOk && h < n ? `<p class="build-note">You have ${h} of ${n}. Tap + above when you loot one.</p>` : ""}</div>
+  </div>
+  ${disQueueCard(r.id)}
+  <div class="card">${r.notes ? `<p class="modal-msg">${esc(r.notes)}</p>` : ""}${r.source ? `<p class="muted-s">Source: ${esc(r.source)}</p>` : ""}
+    <div class="inline"><button class="btn" data-act="dis-edit" data-id="${esc(r.id)}">✏️ Edit</button>
+    ${r.edited ? `<button class="btn" data-act="dis-reset" data-id="${esc(r.id)}">↩️ Reset to default</button>` : ""}
+    ${r.custom ? `<button class="btn danger" data-act="dis-delete" data-id="${esc(r.id)}">🗑 Delete</button>` : ""}</div></div>`;
+}
+function openDisForm(id) {
+  const r = id ? disGet(id) : null, kind = !r ? "new" : r.custom ? "custom" : "builtin";
+  const v = r || { input: "", outputs: [], time: DIS_DEFAULT_MIN, station: null, notes: "" };
+  const stOpts = ROOMS.map((room) => `<optgroup label="${esc(room.name)}">${STATIONS.filter((s) => s.room === room.id).map((s) => `<option value="${s.id}" ${v.station && v.station.id === s.id ? "selected" : ""}>${esc(s.name)}</option>`).join("")}</optgroup>`).join("");
+  openModal(`<form data-form="dis" data-id="${r ? esc(r.id) : ""}" data-kind="${kind}"><h3>${r ? "Edit disassembly" : "Add item to disassemble"}</h3>
+    ${kind === "builtin" ? `<p class="muted-s">Your changes are saved separately. “Reset to default” brings back the original.</p>` : ""}
+    <label>Item you disassemble<select name="input" data-change="output-select"><option value="__new" ${v.input ? "" : "selected"}>＋ New item…</option>${itemOptions(v.input)}</select></label>
+    <label id="new-output" ${v.input ? "hidden" : ""}>New item name (added to Inventory as “Disassemble”)<input name="newInput" maxlength="60"></label>
+    <div><div class="summary-row"><b>You get</b><span class="muted-s">? = amount unconfirmed</span></div>
+      <div id="ing-rows">${(v.outputs.length ? v.outputs : [null]).map(ingRowHtml).join("")}</div>
+      <button type="button" class="btn" data-act="ing-add">＋ Add output</button>
+      <p class="muted-s">Output not in the list? Add it first in Inventory → ＋ Add.</p></div>
+    <div class="two"><label>Time hours<input name="hours" type="number" min="0" value="${Math.floor(v.time / 60)}"></label>
+      <label>minutes<input name="minutes" type="number" min="0" max="59" value="${v.time % 60}"></label></div>
+    <div class="two"><label>Station needed<select name="station"><option value="">None / unknown</option>${stOpts}</select></label>
+      <label class="narrow">Level<input name="stationLevel" type="number" min="1" max="3" value="${v.station ? v.station.level : 1}"></label></div>
+    <label>Notes<textarea name="notes" rows="2">${esc(v.notes)}</textarea></label>
+    <p class="error" id="form-error"></p>
+    <div class="modal-buttons"><button type="submit" class="btn primary">Save</button><button type="button" class="btn" data-act="modal-close">Cancel</button></div></form>`);
+}
+
+// ---------- Hook into the main app ----------
+let disPending = false, lastDisReady = 0;
+const baseRender = render;
+render = function () {
+  if (disAdvance()) saveState();
+  disPending = false;
+  baseRender();
+  const [main, sub, a] = route();
+  const tab = document.querySelector('.subtabs a[href="#/hideout/disassembly"]');
+  if (main === "hideout" && (sub === "disassembly" || sub === "dis")) {
+    const page = document.querySelector("#app main.page");
+    if (page) page.innerHTML = sub === "dis" ? renderDisRecipe(a) : renderDisassembly();
+    if (tab) tab.classList.add("active");
+    const back = document.querySelector("#app .back");
+    if (back && sub === "dis") back.setAttribute("href", "#/hideout/disassembly");
+  }
+  lastDisReady = disReadyCount();
+  if (tab && lastDisReady) tab.insertAdjacentHTML("beforeend", ` <span class="pill">${lastDisReady}</span>`);
+};
+
+// Material rows: show where a part comes from / what it's used for
+const baseMatRow = matRow;
+matRow = function (id, need, extra = "") {
+  const sub = route()[1];
+  let add = "";
+  if (sub === "dis") {
+    const u = usedIn(id).recipes;
+    if (u.length) add = `<span class="muted-s">🛠 Used in: ${u.map((x) => `<a href="#/hideout/recipe/${encodeURIComponent(x.r.id)}">${esc(x.r.name)}</a>`).join(", ")}</span>`;
+  } else if (sub === "recipe" || sub === "station") {
+    const src = disSourcesOf(id);
+    if (src.length) add = `<span class="muted-s">🔩 From disassembling: ${src.map((r) => `<a href="#/hideout/dis/${encodeURIComponent(r.id)}">${esc(disName(r))}</a>`).join(", ")}</span>`;
+  }
+  return baseMatRow(id, need, extra + add);
+};
+
+// Inventory item details: disassembly info
+const baseItemDetails = itemDetails;
+itemDetails = function (it) {
+  let h = baseItemDetails(it);
+  const into = disAll().filter((r) => r.input === it.id), src = disSourcesOf(it.id);
+  if (into.length || src.length) h = h.replace("<div>Not used by any station or known recipe.</div>", "");
+  if (into.length) h += `<div><b>🔩 Disassembles into</b><ul>${into.map((r) => `<li><a href="#/hideout/dis/${encodeURIComponent(r.id)}">${outText(r)}</a></li>`).join("")}</ul></div>`;
+  if (src.length) h += `<div><b>🔩 Get it by disassembling</b><ul>${src.map((r) => `<li><a href="#/hideout/dis/${encodeURIComponent(r.id)}">${esc(disName(r))}</a></li>`).join("")}</ul></div>`;
+  return h;
+};
+
+Object.assign(ACTIONS, {
+  "dis-hide-note"() { state.prefs.hideDisNote = true; commit(); },
+  "dis-filter"(el) { state.prefs.disFilter = el.dataset.v; commit(); },
+  "dis-n"(el) { const id = el.dataset.id; ui.disN[id] = clamp((ui.disN[id] || 1) + int(el.dataset.d), 1, 99); render(); },
+  "dis-all"(el) { const r = disGet(el.dataset.id); if (r) { ui.disN[r.id] = Math.max(1, have(r.input)); render(); } },
+  "dis-add"(el) { const r = disGet(el.dataset.id); if (r) disAdd(r, el.dataset.n ? int(el.dataset.n) : ui.disN[r.id] || 1); },
+  "dis-collect"(el) { disCollect([el.dataset.id]); },
+  "dis-collect-all"() { disCollect(state.disQueue.map((q) => q.id)); },
+  "dis-cancel"(el) {
+    const e = state.disQueue.find((q) => q.id === el.dataset.id); if (!e) return;
+    confirmBox("Remove from queue?", `Take ${esc(itemName(e.input))} out of the queue? It goes back to your Inventory.`, "Remove", () => {
+      const snap = snapshot(), cur = state.disQueue.find((q) => q.id === e.id); if (!cur) return;
+      const wasRunning = cur.start != null && cur.start + cur.dur > Date.now();
+      setCountRaw(cur.input, have(cur.input) + 1);
+      state.disQueue = state.disQueue.filter((q) => q.id !== cur.id);
+      if (wasRunning) bumpWaiting();
+      disAdvance(); commit(); showToast("Removed – item returned to Inventory", snap, "discancel");
+    }, true);
+  },
+  "dis-move"(el) {
+    const id = el.dataset.id, d = int(el.dataset.d), cur = state.disQueue.find((x) => x.id === id); if (!cur) return;
+    const running = cur.start != null && cur.start + cur.dur > Date.now();
+    const doMove = () => {
+      const q = state.disQueue, a = q.findIndex((x) => x.id === id), b = a + d;
+      if (a < 0 || b < 0 || b >= q.length) return;
+      const snap = snapshot(), item = q[a];
+      q[a] = q[b]; q[b] = item;
+      const wasRunning = item.start != null && item.start + item.dur > Date.now();
+      if (wasRunning) { item.start = null; bumpWaiting(); }
+      disAdvance(); commit(); showToast(wasRunning ? "Moved – its timer restarted" : "Moved", snap, "dismove");
+    };
+    if (running) confirmBox("Move this item?", "In-game, moving an item resets its disassembly timer. The app does the same.", "Move & restart", doMove);
+    else doMove();
+  },
+  "dis-add-recipe"() { openDisForm(null); },
+  "dis-edit"(el) { openDisForm(el.dataset.id); },
+  "dis-reset"(el) {
+    const id = el.dataset.id;
+    confirmBox("Reset to default?", "Your edits to this item are removed and the app's default data comes back.", "Reset", () => {
+      const snap = snapshot(); delete state.disOverrides[id]; commit(); showToast("Reset to default", snap, "disreset");
+    }, true);
+  },
+  "dis-delete"(el) {
+    const id = el.dataset.id;
+    confirmBox("Delete this entry?", "This custom disassembly entry will be deleted. Items already in the queue are kept.", "Delete", () => {
+      const snap = snapshot(); state.disCustom = state.disCustom.filter((r) => r.id !== id);
+      saveState(); location.hash = "#/hideout/disassembly"; render(); showToast("Deleted", snap, "disdel");
+    }, true);
+  },
+  reset() {
+    confirmBox("Reset for wipe?", "Sets every item count to 0, every station to level 0, and clears active crafts, the disassembly queue and recipe/task ticks. Favorites, order, custom items and custom recipes are kept.", "Reset", () => {
+      const snap = snapshot();
+      state.counts = {}; state.stationLevels = {}; state.jobs = []; state.recipeFlags = {}; state.disQueue = [];
+      commit(); showToast("Reset done", snap, "reset");
+    }, true);
+  },
+});
+
+document.addEventListener("input", (e) => {
+  const t = e.target;
+  if (t.dataset && t.dataset.input === "dis-search") {
+    ui.disQuery = t.value;
+    const l = document.getElementById("dis-list"); if (l) l.innerHTML = renderDisList();
+  }
+});
+document.addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.dataset && t.dataset.change === "dis-slots") {
+    state.prefs.disSlots = clamp(int(t.value), 1, 6); bumpWaiting(); disAdvance(); commit();
+  }
+});
+document.addEventListener("submit", (e) => {
+  const f = e.target; if (!f.dataset || f.dataset.form !== "dis") return;
+  e.preventDefault();
+  const fd = new FormData(f), g = (k) => String(fd.get(k) || "").trim();
+  const err = (m) => { const x = document.getElementById("form-error"); if (x) x.textContent = m; };
+  const kind = f.dataset.kind, id = kind === "new" ? "dis-custom-" + uid() : f.dataset.id;
+  const outs = [];
+  f.querySelectorAll(".ing-row").forEach((row) => {
+    const item = row.querySelector(".ing-item").value; if (!item) return;
+    const qty = Math.max(1, int(row.querySelector(".ing-qty").value) || 1), unsure = row.querySelector(".ing-unsure").checked;
+    const ex = outs.find((o) => o.item === item);
+    if (ex) ex.qty += qty; else outs.push({ item, qty, unsure });
+  });
+  if (!outs.length) return err("Add at least one item you get.");
+  let input = g("input"), newName = "";
+  if (input === "__new") {
+    newName = g("newInput");
+    if (!newName) return err("Type the item's name, or pick it from the list.");
+    const ex = allItems().find((i) => slug(i.name) === slug(newName));
+    input = ex ? ex.id : "";
+  }
+  if (input && outs.some((o) => o.item === input)) return err("An item can't give itself.");
+  if (input && disAll().some((r) => r.input === input && r.id !== id)) return err("This item already has a disassembly entry – edit that one instead.");
+  const snap = snapshot();
+  if (!input) {
+    const it = cleanItem({ id: newItemId(newName), name: newName, category: "disassembly", info: IN_INFO });
+    state.customItems.push(it); state.order.push(it.id); input = it.id;
+  }
+  const stId = g("station"), base = DIS_BY_ID[id];
+  const rec = cleanDis({
+    id, input, outputs: outs, time: int(g("hours")) * 60 + clamp(int(g("minutes")), 0, 59),
+    station: stId ? { id: stId, level: g("stationLevel") } : null, notes: g("notes"), source: base ? base.source : "Added by you",
+  });
+  if (kind === "builtin") state.disOverrides[id] = rec;
+  else if (kind === "custom") state.disCustom = state.disCustom.map((r) => (r.id === id ? rec : r));
+  else state.disCustom.push(rec);
+  closeModal(); saveState();
+  const target = "#/hideout/dis/" + encodeURIComponent(id);
+  if (location.hash !== target) location.hash = target;
+  render(); showToast(kind === "new" ? "Added " + itemName(input) : "Saved", snap, "dissave");
+});
+
+// Timer: start the next item when one finishes, refresh the screen when something is ready
+const safeToRender = () => !document.querySelector("#modal-root .modal") && !document.body.classList.contains("is-dragging") &&
+  !(document.activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName));
+setInterval(() => {
+  const changed = disAdvance(), r = disReadyCount();
+  if (changed) saveState();
+  if (changed || r !== lastDisReady) {
+    if (r > lastDisReady) showToast("🔩 Disassembly finished – ready to collect");
+    lastDisReady = r; disPending = true;
+  }
+  if (disPending && safeToRender()) render();
+}, 1000);
+
+render();
+})();
+</script>
+</body>
+</html>
+<script>
+// =============================================================
+// ART & LOOK (added in 0.1.5)
+// =============================================================
+(() => {
+"use strict";
+const ART_KEY = "gzw-companion-art";
+const STYLE_END = "gritty realistic military art, muted olive green and khaki, foggy Southeast Asian jungle, film grain, moody lighting, no text, no logos";
+const S = (id, group, label, where, shape, aspect, max, prompt, extra = {}) => ({ id, group, label, where, shape, aspect, max, prompt, ...extra });
+const ART_SLOTS = [
+  S("banner", "Home", "Home banner", "Big picture at the top of the home screen", "Wide (16:9)", "16/9", 1400,
+    "A contractor in jungle camo and plate carrier, seen from behind, overlooking a misty jungle valley with an abandoned village at dawn"),
+  S("bg", "Home", "App background", "Behind every screen, darkened so text stays readable", "Tall (9:16)", "3/4", 1200,
+    "Dense dark jungle foliage and wet leaves at night, very dark and subtle, mostly black and deep green"),
+  S("card-hideout", "Home cards", "Hideout card", "Hideout button on the home screen", "Square", "1/1", 600,
+    "A hidden jungle hideout in an old concrete bunker with tarps, sandbags and a diesel generator", { tab: "hideout" }),
+  S("card-player", "Home cards", "Player card", "Player button on the home screen", "Square", "1/1", 600,
+    "A geared-up operator portrait in a helmet with night vision mount, jungle in the background", { tab: "player" }),
+  S("card-weapons", "Home cards", "Weapon Builds card", "Weapon Builds button on the home screen", "Square", "1/1", 600,
+    "A customized assault rifle with scope and suppressor on a gun mat, with parts around it", { tab: "weapons" }),
+  S("card-loot", "Home cards", "Loot List card", "Loot List button on the home screen", "Square", "1/1", 600,
+    "An open military crate full of loot, cash and electronics in a dim jungle hut", { tab: "loot" }),
+  S("card-more", "Home cards", "More card", "More button on the home screen", "Square", "1/1", 600,
+    "A field radio, paper map and compass on a rough wooden crate, lit by a flashlight beam", { tab: "more" }),
+  S("tab-inventory", "Hideout headers", "Inventory header", "Top of the Inventory tab", "Wide (16:9)", "16/9", 1200,
+    "A wooden table covered with salvaged loot: steel plates, circuit boards, copper wire, tools and a motor oil can", { sub: "inventory" }),
+  S("tab-rooms", "Hideout headers", "Rooms header", "Top of the Rooms tab", "Wide (16:9)", "16/9", 1200,
+    "The inside of a makeshift bunker room with workbenches, lab equipment and hanging lights", { sub: "rooms" }),
+  S("tab-crafting", "Hideout headers", "Crafting header", "Top of the Crafting tab", "Wide (16:9)", "16/9", 1200,
+    "Hands soldering a circuit board on a cluttered electronics workbench, warm lamp light", { sub: "crafting" }),
+  S("tab-disassembly", "Hideout headers", "Disassembly header", "Top of the Disassembly tab", "Wide (16:9)", "16/9", 1200,
+    "A military radio taken apart on a workbench, its parts laid out neatly", { sub: "disassembly" }),
+  S("icon", "App icon", "App icon", "Icon when the app is added to a home screen (only works once the app is online)", "Square (1:1)", "1/1", 512,
+    "A simple bold emblem: a jungle bunker silhouette inside a circle, olive and black", { square: true }),
+];
+const slotById = (id) => ART_SLOTS.find((s) => s.id === id) || null;
+
+// Only allow safe picture links (no quotes or brackets that could break the page)
+const SAFE_URL = /^(https:\/\/[^\s"'()<>\\]+|data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+)$/;
+function fixLink(u) {
+  u = String(u || "").trim();
+  const m = u.match(/^https?:\/\/(?:www\.|m\.)?imgur\.com\/([A-Za-z0-9]{5,10})$/);
+  if (m) return "https://i.imgur.com/" + m[1] + ".jpg";
+  if (/^http:\/\//i.test(u)) u = "https://" + u.slice(7);
+  return u;
+}
+function cleanArt(raw) {
+  const out = {}, s = isObj(raw) && isObj(raw.slots) ? raw.slots : {};
+  for (const sl of ART_SLOTS) if (typeof s[sl.id] === "string" && SAFE_URL.test(s[sl.id])) out[sl.id] = s[sl.id];
+  return out;
+}
+function loadArt() { try { return cleanArt(JSON.parse(localStorage.getItem(ART_KEY) || "{}")); } catch (e) { return {}; } }
+let art = loadArt();
+function saveArt(next) {
+  try { localStorage.setItem(ART_KEY, JSON.stringify({ v: 1, slots: next })); art = next; return true; } catch (e) { return false; }
+}
+function setSlot(id, url) {
+  const next = { ...art };
+  if (url) next[id] = url; else delete next[id];
+  if (!saveArt(next)) { showToast("⚠️ Not enough space on this device. Remove another picture, or use a link instead of uploading."); return false; }
+  render(); return true;
+}
+const cssUrl = (u) => `url('${u}')`;
+const artBg = (u, top, bottom) => `background-image:linear-gradient(to top, rgba(20,23,15,${bottom}), rgba(20,23,15,${top})), ${cssUrl(u)}`;
+
+// Shrinks an uploaded picture so it fits in the phone's storage
+function shrink(file, slot) {
+  return new Promise((res, rej) => {
+    if (!file.type || !file.type.startsWith("image/")) return rej(new Error("That file isn't a picture."));
+    const src = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      let w = img.naturalWidth, h = img.naturalHeight, sx = 0, sy = 0, sw = w, sh = h;
+      if (slot.square) { const m = Math.min(w, h); sx = (w - m) / 2; sy = (h - m) / 2; sw = sh = m; }
+      const k = Math.min(1, slot.max / Math.max(sw, sh));
+      const c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(sw * k)); c.height = Math.max(1, Math.round(sh * k));
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#14170f"; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(src);
+      res(c.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(src); rej(new Error("Couldn't read that picture. Try a JPG or PNG.")); };
+    img.src = src;
+  });
+}
+function testUrl(u) {
+  return new Promise((res) => {
+    const i = new Image(); let done = false;
+    const fin = (v) => { if (!done) { done = true; res(v); } };
+    i.onload = () => fin(true); i.onerror = () => fin(false);
+    i.referrerPolicy = "no-referrer"; i.src = u;
+    setTimeout(() => fin(false), 12000);
+  });
+}
+function copyText(t, msg) {
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+    ta.remove();
+    showToast(ok ? msg : "Couldn't copy – open the Prompt and press and hold the text to copy it.");
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => showToast(msg), fallback);
+  else fallback();
+}
+
+// ---------- Screens ----------
+function renderArt() {
+  const used = ART_SLOTS.filter((s) => art[s.id]).length, kb = Math.round(JSON.stringify(art).length / 1024);
+  let h = `<div class="banner"><div>🎨 <b>Add your own GZW-style art.</b><br>1. Make a picture with any free AI image maker (Bing Image Creator, ChatGPT, Leonardo…) using the prompts below.<br>2. Save the picture to your phone.<br>3. Tap <b>📷 Upload</b> on a slot. The app shrinks it and saves it on this device.<br>You can also paste a direct image link instead.</div></div>
+  <div class="card"><div class="summary-row"><b>Style ending (add it to every prompt)</b><button class="btn" data-act="art-copy-style">📋 Copy</button></div>
+    <p class="muted-s">${esc(STYLE_END)}</p>
+    <p class="muted-s">Your own AI art is fine. Don't use real game screenshots or the official GZW logo – those belong to MADFINGER.</p></div>
+  <div class="card"><div class="summary-row"><span>${used} / ${ART_SLOTS.length} pictures · about ${kb} KB used</span>
+    <span class="inline" style="margin:0"><button class="btn" data-act="art-export" ${used ? "" : "disabled"}>⬇️ Art backup</button><button class="btn" data-act="art-import">⬆️ Restore</button></span></div>
+    <p class="muted-s">Art is saved separately from your inventory backup, so make an art backup too.</p></div>`;
+  let group = "";
+  for (const s of ART_SLOTS) {
+    if (s.group !== group) { group = s.group; h += `<div class="section-title">${esc(group)}</div>`; }
+    const u = art[s.id];
+    h += `<div class="card art-slot"><div class="art-row">
+      <div class="art-prev${s.square ? " sq" : ""}" style="aspect-ratio:${s.aspect};${u ? "background-image:" + cssUrl(u) : ""}">${u ? "" : "<span>No picture</span>"}</div>
+      <div class="art-info"><b>${esc(s.label)}</b><span class="muted-s">${esc(s.where)}</span><span class="muted-s">Best shape: ${esc(s.shape)}</span></div></div>
+      <details class="art-prompt"><summary>📝 Prompt</summary><p class="muted-s">${esc(s.prompt)}, ${esc(STYLE_END)}</p>
+        <button class="btn" data-act="art-copy" data-slot="${s.id}">📋 Copy prompt</button></details>
+      <div class="inline"><button class="btn primary" data-act="art-upload" data-slot="${s.id}">📷 Upload</button>
+        ${u ? `<button class="btn danger" data-act="art-remove" data-slot="${s.id}">✕ Remove</button>` : ""}</div>
+      <div class="inline"><input class="search art-url" id="art-url-${s.id}" type="url" placeholder="…or paste a direct image link" value="${u && !u.startsWith("data:") ? esc(u) : ""}">
+        <button class="btn" data-act="art-link" data-slot="${s.id}">Use link</button></div>
+    </div>`;
+  }
+  return h;
+}
+function decorateHome() {
+  const home = document.querySelector("#app .home"); if (!home) return;
+  const cards = home.querySelectorAll(".home-card");
+  MAIN_TABS.forEach((t, i) => {
+    const u = art["card-" + t.id], c = cards[i];
+    if (u && c) { c.classList.add("has-art"); c.setAttribute("style", artBg(u, 0.15, 0.92)); }
+  });
+  if (art.banner) home.insertAdjacentHTML("afterbegin", `<div class="hero" style="${artBg(art.banner, 0.05, 0.9)}"><div class="hero-text">GZW Companion<small>Gray Zone Warfare hideout tracker</small></div></div>`);
+  const used = ART_SLOTS.filter((s) => art[s.id]).length;
+  const foot = home.querySelector(".footnote");
+  const link = `<a class="btn art-link" href="#/art">🎨 Art & look${used ? ` (${used})` : ""}</a>`;
+  if (foot) foot.insertAdjacentHTML("beforebegin", link); else home.insertAdjacentHTML("beforeend", link);
+}
+function addPageHero(sub) {
+  const u = art["tab-" + sub], page = document.querySelector("#app main.page");
+  if (!u || !page) return;
+  const t = HIDEOUT_TABS.find((x) => x.id === sub);
+  page.insertAdjacentHTML("afterbegin", `<div class="page-hero" style="${artBg(u, 0.1, 0.88)}">${t ? esc(t.icon + " " + t.label) : ""}</div>`);
+}
+let lastBg = null, lastIcon = null;
+function setIcon(rel, u) {
+  let l = document.querySelector(`link[rel="${rel}"]`);
+  if (!u) { if (l) l.remove(); return; }
+  if (!l) { l = document.createElement("link"); l.rel = rel; document.head.appendChild(l); }
+  l.href = u;
+}
+function applyGlobal() {
+  const bg = art.bg || "";
+  if (bg !== lastBg) {
+    lastBg = bg;
+    const b = document.body.style;
+    if (bg) {
+      b.backgroundImage = `linear-gradient(rgba(20,23,15,.86), rgba(20,23,15,.94)), ${cssUrl(bg)}`;
+      b.backgroundSize = "cover"; b.backgroundPosition = "center"; b.backgroundAttachment = "fixed"; b.minHeight = "100vh";
+    } else { b.backgroundImage = ""; }
+  }
+  const ic = art.icon || "";
+  if (ic !== lastIcon) { lastIcon = ic; setIcon("apple-touch-icon", ic); setIcon("icon", ic); }
+}
+
+// ---------- Hook into the main app ----------
+const prevRender = render;
+render = function () {
+  prevRender();
+  const [main, sub, a] = route();
+  applyGlobal();
+  if (!main) decorateHome();
+  else if (main === "hideout" && !a && ["inventory", "rooms", "crafting", "disassembly"].includes(sub || "inventory")) addPageHero(sub || "inventory");
+  else if (main === "art") {
+    const h1 = document.querySelector("#app .topbar h1"); if (h1) h1.textContent = "Art & look";
+    const page = document.querySelector("#app main.page"); if (page) page.innerHTML = renderArt();
+  }
+  const v = document.querySelector("#app .version"); if (v) v.textContent = "v0.1.5";
+};
+
+const artFile = document.createElement("input");
+artFile.type = "file"; artFile.accept = "image/*"; artFile.hidden = true;
+const artImport = document.createElement("input");
+artImport.type = "file"; artImport.accept = ".json,application/json"; artImport.hidden = true;
+document.body.appendChild(artFile); document.body.appendChild(artImport);
+let artTarget = null;
+
+Object.assign(ACTIONS, {
+  "art-upload"(el) { artTarget = slotById(el.dataset.slot); if (!artTarget) return; artFile.value = ""; artFile.click(); },
+  "art-remove"(el) {
+    const s = slotById(el.dataset.slot); if (!s) return;
+    confirmBox("Remove picture?", `Remove the <b>${esc(s.label)}</b> picture?`, "Remove", () => { if (setSlot(s.id, null)) showToast("Picture removed"); }, true);
+  },
+  "art-link"(el) {
+    const s = slotById(el.dataset.slot); if (!s) return;
+    const inp = document.getElementById("art-url-" + s.id), u = fixLink(inp ? inp.value : "");
+    if (!u) return showToast("Paste a link first.");
+    if (!SAFE_URL.test(u)) return showToast("⚠️ That doesn't look like a direct https image link.");
+    showToast("Checking link…");
+    testUrl(u).then((good) => {
+      if (!good) return showToast("⚠️ Couldn't load a picture from that link. Use a direct link – it usually ends in .jpg or .png.");
+      if (setSlot(s.id, u)) showToast("🎨 " + s.label + " updated");
+    });
+  },
+  "art-copy"(el) { const s = slotById(el.dataset.slot); if (s) copyText(s.prompt + ", " + STYLE_END, "Prompt copied"); },
+  "art-copy-style"() { copyText(STYLE_END, "Style copied"); },
+  "art-export"() {
+    try {
+      const blob = new Blob([JSON.stringify({ app: "gzw-companion-art", v: 1, slots: art })], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = "gzw-companion-art-" + new Date().toISOString().slice(0, 10) + ".json";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      showToast("Art backup downloaded");
+    } catch (e) { showToast("⚠️ Couldn't download in this browser view."); }
+  },
+  "art-import"() { artImport.value = ""; artImport.click(); },
+});
+artFile.addEventListener("change", () => {
+  const f = artFile.files && artFile.files[0], s = artTarget; if (!f || !s) return;
+  showToast("Processing picture…");
+  shrink(f, s).then((d) => { if (setSlot(s.id, d)) showToast(`🎨 ${s.label} updated (${Math.round(d.length / 1024)} KB)`); })
+    .catch((e) => showToast("⚠️ " + e.message));
+});
+artImport.addEventListener("change", () => {
+  const f = artImport.files && artImport.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    let next;
+    try { const d = JSON.parse(String(rd.result)); if (!d || d.app !== "gzw-companion-art") throw 0; next = cleanArt(d); }
+    catch (e) { return showToast("⚠️ That isn't a GZW Companion art backup."); }
+    confirmBox("Restore art?", `This replaces your current pictures with ${Object.keys(next).length} from the backup.`, "Restore", () => {
+      if (saveArt(next)) { render(); showToast("🎨 Art restored"); } else showToast("⚠️ Not enough space on this device.");
+    }, true);
+  };
+  rd.readAsText(f);
+});
+2
+document.head.insertAdjacentHTML("beforeend", `<style>
+.hero { grid-column: 1 / -1; min-height: 190px; border-radius: var(--radius); border: 1px solid var(--border); background-size: cover; background-position: center; display: flex; align-items: flex-end; }
+.hero-text { padding: 14px; font-size: 22px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 2px 6px #000; }
+.hero-text small { display: block; font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none; color: #c9ccbc; }
+.home-card.has-art { min-height: 140px; justify-content: flex-end; background-size: cover; background-position: center; text-shadow: 0 1px 4px #000; }
+.home-card.has-art .home-icon { display: none; }
+.art-link { grid-column: 1 / -1; text-align: center; }
+.page-hero { height: 120px; border-radius: var(--radius); border: 1px solid var(--border); background-size: cover; background-position: center; margin-bottom: 10px; display: flex; align-items: flex-end; padding: 10px 12px; font-weight: 800; font-size: 18px; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 2px 6px #000; }
+.art-row { display: flex; gap: 12px; align-items: center; }
+.art-prev { width: 120px; flex-shrink: 0; border-radius: 8px; background-color: var(--panel-2); background-size: cover; background-position: center; background-repeat: no-repeat; display: grid; place-items: center; font-size: 12px; color: var(--muted); border: 1px solid var(--border); }
+.art-prev.sq { width: 90px; }
+.art-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.art-prompt { margin-top: 8px; font-size: 13px; }
+.art-prompt summary { cursor: pointer; color: var(--accent); }
+.art-url { min-width: 0; font-size: 14px; padding: 8px 10px; }
+</style>`);
+
+render();
+})();
+</script>
