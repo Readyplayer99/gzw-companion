@@ -2449,3 +2449,226 @@ render();
 loadDefaults();
 })();
 </script>
+</html>
+<script>
+// =============================================================
+// LAUNCH ADD-ON (added in 0.1.6): built-in art, feedback, about, what's new
+// =============================================================
+(() => {
+"use strict";
+// ---------- Settings: change these if you need to ----------
+const VERSION = "0.1.6";
+const SITE = "https://readyplayer99.github.io/gzw-companion/";
+const FEEDBACK_URL = ""; // paste your Google Form link between the quotes, e.g. "https://forms.gle/abc123"
+const REPO_URL = "https://github.com/Readyplayer99/gzw-companion";
+const ABOUT = "Free GZW hideout tracker. Track materials, station upgrades, crafting and disassembly timers, and pin goals for a shopping list. Coming soon: player stats, weapon builder and loot prices. I made it because I kept losing track of what my hideout needed.";
+const DISCLAIMER = "Unofficial community-made tool. Not affiliated with or endorsed by MADFINGER Games.";
+const CHANGELOG = [
+  { v: "0.1.6", items: ["Built-in art: everyone now sees the pictures", "💬 Feedback, ℹ️ About and 📰 What's new on the home screen", "Fan-made disclaimer"] },
+  { v: "0.1.5", items: ["🎨 Art & look: add your own pictures (they replace the built-in ones on your device)"] },
+  { v: "0.1.4", items: ["🔩 Disassembly tab: queue, timers that keep running while you're away, Collect"] },
+  { v: "0.1.3", items: ["🛠 Crafting tab: lock requirements, craft timers, add and edit recipes"] },
+];
+
+// ---------- Built-in art, loaded from the app's website ----------
+// Each picture is looked for as <slot name> + one of these endings, in this order.
+const EXTS = [".jpg", ".jpeg", ".webp", ".jpg.jpg", ".png.jpg", ".png", ".jpg.png", ".png.png"];
+const FILES_KEY = "gzw-companion-art-files";
+const SEEN_KEY = "gzw-companion-seen";
+let cache = {};
+try { cache = JSON.parse(localStorage.getItem(FILES_KEY) || "{}") || {}; } catch (e) { cache = {}; }
+const found = {}, pending = new Set();
+let needRender = false;
+
+function tryLoad(url) {
+  return new Promise((res) => {
+    const i = new Image(); let done = false;
+    const fin = (v) => { if (!done) { done = true; res(v); } };
+    i.onload = () => fin(true); i.onerror = () => fin(false);
+    i.src = url;
+    setTimeout(() => fin(false), 90000);
+  });
+}
+async function probe(id) {
+  for (const e of EXTS) { const u = SITE + id + e; if (await tryLoad(u)) return u; }
+  return null;
+}
+// Returns the picture link for a slot (or null). Starts looking for it the first time.
+function want(id) {
+  if (id in found) return found[id];
+  if (!pending.has(id)) {
+    pending.add(id);
+    const before = cache[id] || null;
+    probe(id).then((u) => {
+      pending.delete(id); found[id] = u;
+      if (u) cache[id] = u; else delete cache[id];
+      try { localStorage.setItem(FILES_KEY, JSON.stringify(cache)); } catch (e) {}
+      if (u !== before) needRender = true;
+    });
+  }
+  return cache[id] || null;
+}
+const userArt = () => (window.GZW_ART && window.GZW_ART.art) || {};
+const bgStyle = (u, top, bottom) => `background-image:linear-gradient(to top, rgba(20,23,15,${bottom}), rgba(20,23,15,${top})), url('${u}')`;
+function setLink(rel, href) {
+  let l = document.querySelector(`link[rel="${rel}"]`);
+  if (!l) { l = document.createElement("link"); l.rel = rel; document.head.appendChild(l); }
+  if (l.getAttribute("href") !== href) l.setAttribute("href", href);
+}
+
+// ---------- Buttons & popups ----------
+const feedbackBtn = (cls = "btn") => FEEDBACK_URL
+  ? `<a class="${cls}" href="${esc(FEEDBACK_URL)}" target="_blank" rel="noopener">💬 Feedback</a>`
+  : `<button class="${cls}" data-act="launch-feedback">💬 Feedback</button>`;
+function cmpV(a, b) {
+  const pa = String(a).split(".").map(Number), pb = String(b).split(".").map(Number);
+  for (let i = 0; i < 3; i++) { const d = (pa[i] || 0) - (pb[i] || 0); if (d) return d; }
+  return 0;
+}
+const changesHtml = (list) => list.map((c) => `<div class="wn"><b>v${esc(c.v)}</b><ul>${c.items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul></div>`).join("");
+function showWelcome() {
+  openModal(`<div class="modal-body"><h3>👋 Welcome to GZW Companion</h3>
+    <p class="modal-msg">${esc(ABOUT)}</p>
+    <div><b>Quick start</b><ol class="qs"><li>Open <b>Hideout → Rooms</b>, tap each station you've built in-game and use <b>Set level</b>.</li>
+      <li>Open <b>Inventory</b> and enter the materials you have.</li>
+      <li><b>📌 Pin</b> the stations or crafts you're working on to get a shopping list.</li></ol></div>
+    <p class="muted-s">🔒 No account and no tracking. Your data stays on this device. Use Inventory → ⋯ → Download backup to keep it safe.</p>
+    <p class="muted-s">${esc(DISCLAIMER)}</p>
+    <div class="modal-buttons"><button class="btn primary" data-act="modal-close">Let's go</button>${feedbackBtn()}</div></div>`);
+}
+function showWhatsNew(since) {
+  const list = CHANGELOG.filter((c) => !since || cmpV(c.v, since) > 0);
+  openModal(`<div class="modal-body"><h3>📰 What's new</h3>${changesHtml(list.length ? list : CHANGELOG)}
+    <p class="muted-s">Game data comes from the community and is still unconfirmed for update 0.5. Spot a mistake? Tap Feedback.</p>
+    <div class="modal-buttons"><button class="btn primary" data-act="modal-close">Got it</button>${feedbackBtn()}</div></div>`);
+}
+function showAbout() {
+  openModal(`<div class="modal-body"><h3>ℹ️ About GZW Companion</h3>
+    <p class="modal-msg">${esc(ABOUT)}</p>
+    <p class="muted-s">🔒 No account and no tracking. Everything you enter is saved only on this device.</p>
+    <p class="muted-s">📊 Game data comes from community sources (gzwiki.org, grayzonewarfaregame.wiki, the Fandom wiki and gzwhideout.com) and is unconfirmed for update 0.5.</p>
+    <p class="muted-s">${esc(DISCLAIMER)} Art is AI-generated.</p>
+    <p class="muted-s">Version ${VERSION}</p>
+    <div class="modal-buttons wrap">${feedbackBtn()}<a class="btn" href="${REPO_URL}" target="_blank" rel="noopener">GitHub</a><button class="btn" data-act="modal-close">Close</button></div></div>`);
+}
+function showFeedback() {
+  openModal(`<div class="modal-body"><h3>💬 Send feedback</h3>
+    <p class="modal-msg">Found a bug or wrong data, or have an idea? I'd love to hear it.</p>
+    <ul class="qs"><li>Reply on the post where you found this app, or</li><li>open an issue on GitHub (free account needed).</li></ul>
+    <p class="muted-s">Reporting a bug? Tap <b>Copy device info</b> and paste it into your message.</p>
+    <div class="modal-buttons wrap"><a class="btn primary" href="${REPO_URL}/issues" target="_blank" rel="noopener">GitHub issues</a><button class="btn" data-act="launch-device">📋 Copy device info</button><button class="btn" data-act="modal-close">Close</button></div></div>`);
+}
+function copy(t) {
+  const done = () => showToast("Copied. Paste it into your message.");
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = t; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+    ta.remove(); if (ok) done(); else showToast("Couldn't copy in this browser.");
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fallback); else fallback();
+}
+function isNewUser() {
+  try { return !Object.keys(state.counts || {}).length && !Object.keys(state.stationLevels || {}).length; } catch (e) { return true; }
+}
+function maybePopup() {
+  let seen = null;
+  try { seen = localStorage.getItem(SEEN_KEY); } catch (e) {}
+  if (seen === VERSION) return;
+  try { localStorage.setItem(SEEN_KEY, VERSION); } catch (e) {}
+  if (document.querySelector("#modal-root .modal")) return;
+  if (!seen && isNewUser()) showWelcome(); else showWhatsNew(seen || "0.1.5");
+}
+
+// ---------- Hook into the main app ----------
+function decorate() {
+  const ua = userArt(), pick = (id) => (ua[id] ? null : want(id));
+  const [main, sub, a] = route();
+  if (!ua.bg) {
+    const u = pick("bg");
+    if (u) {
+      const b = document.body.style;
+      b.backgroundImage = `linear-gradient(rgba(20,23,15,.86), rgba(20,23,15,.94)), url('${u}')`;
+      b.backgroundSize = "cover"; b.backgroundPosition = "center"; b.backgroundAttachment = "fixed"; b.minHeight = "100vh";
+    }
+  }
+  if (!ua.icon) { const u = pick("icon"); if (u) { setLink("apple-touch-icon", u); setLink("icon", u); } }
+  if (!main) {
+    const home = document.querySelector("#app .home"); if (!home) return;
+    const cards = home.querySelectorAll(".home-card");
+    MAIN_TABS.forEach((t, i) => {
+      const c = cards[i]; if (!c || c.classList.contains("has-art")) return;
+      const u = pick("card-" + t.id);
+      if (u) { c.classList.add("has-art"); c.setAttribute("style", bgStyle(u, 0.15, 0.92)); }
+    });
+    if (!home.querySelector(".hero")) {
+      const u = pick("banner");
+      if (u) home.insertAdjacentHTML("afterbegin", `<div class="hero" style="${bgStyle(u, 0.05, 0.9)}"><div class="hero-text">GZW Companion<small>Gray Zone Warfare hideout tracker</small></div></div>`);
+    }
+    const links = `<div class="launch-links">${feedbackBtn()}<button class="btn" data-act="launch-about">ℹ️ About</button><button class="btn" data-act="launch-news">📰 What's new</button></div>`;
+    const foot = home.querySelector(".footnote");
+    if (foot) foot.insertAdjacentHTML("beforebegin", links); else home.insertAdjacentHTML("beforeend", links);
+    home.insertAdjacentHTML("beforeend", `<p class="footnote disclaimer">${esc(DISCLAIMER)}</p>`);
+  } else if (main === "hideout" && !a) {
+    const s = sub || "inventory";
+    if (["inventory", "rooms", "crafting", "disassembly"].includes(s) && !ua["tab-" + s]) {
+      const page = document.querySelector("#app main.page");
+      const u = pick("tab-" + s);
+      if (page && u && !page.querySelector(".page-hero")) {
+        const t = HIDEOUT_TABS.find((x) => x.id === s);
+        page.insertAdjacentHTML("afterbegin", `<div class="page-hero" style="${bgStyle(u, 0.1, 0.88)}">${t ? esc(t.icon + " " + t.label) : ""}</div>`);
+      }
+    }
+  } else if (main === "art" && window.GZW_ART) {
+    const page = document.querySelector("#app main.page");
+    const first = page && page.querySelector(".banner");
+    if (first) first.insertAdjacentHTML("afterend", `<div class="hint">🖼 Slots marked <b>Built-in</b> use the app's own pictures, which everyone sees. A picture you upload here replaces it on this device only.</div>`);
+    const cards = page ? page.querySelectorAll(".art-slot") : [];
+    window.GZW_ART.ART_SLOTS.forEach((s, i) => {
+      if (ua[s.id]) return;
+      const u = want(s.id), c = cards[i]; if (!u || !c) return;
+      const p = c.querySelector(".art-prev");
+      if (p) { p.style.backgroundImage = `url('${u}')`; p.innerHTML = '<span class="built-in">Built-in</span>'; }
+    });
+  }
+}
+const prevRender = render;
+render = function () {
+  prevRender();
+  try { decorate(); } catch (e) { console.warn("Art add-on:", e); }
+  const v = document.querySelector("#app .version"); if (v) v.textContent = "v" + VERSION;
+};
+
+Object.assign(ACTIONS, {
+  "launch-feedback"() { showFeedback(); },
+  "launch-about"() { showAbout(); },
+  "launch-news"() { showWhatsNew(null); },
+  "launch-device"() { copy(`GZW Companion v${VERSION} · ${location.href.split("#")[0]} · screen ${innerWidth}x${innerHeight} · ${navigator.userAgent}`); },
+});
+
+// Redraw once a built-in picture has loaded (waits if you're typing or a popup is open)
+const safe = () => !document.querySelector("#modal-root .modal") && !document.body.classList.contains("is-dragging") &&
+  !(document.activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName));
+setInterval(() => { if (needRender && safe()) { needRender = false; render(); } }, 500);
+
+document.head.insertAdjacentHTML("beforeend", `<style>
+.launch-links { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.disclaimer { margin-top: 2px !important; }
+.modal-buttons.wrap { flex-wrap: wrap; }
+.wn { margin-bottom: 6px; }
+.wn ul, .qs { margin: 4px 0 0; padding-left: 20px; font-size: 14px; line-height: 1.5; }
+.built-in { background: rgba(0,0,0,.65); color: var(--text); padding: 2px 6px; border-radius: 6px; font-size: 11px; }
+.hero { grid-column: 1 / -1; min-height: 190px; border-radius: var(--radius); border: 1px solid var(--border); background-size: cover; background-position: center; display: flex; align-items: flex-end; }
+.hero-text { padding: 14px; font-size: 22px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 2px 6px #000; }
+.hero-text small { display: block; font-size: 12px; font-weight: 400; letter-spacing: 0; text-transform: none; color: #c9ccbc; }
+.home-card.has-art { min-height: 140px; justify-content: flex-end; background-size: cover; background-position: center; text-shadow: 0 1px 4px #000; }
+.home-card.has-art .home-icon { display: none; }
+.page-hero { height: 120px; border-radius: var(--radius); border: 1px solid var(--border); background-size: cover; background-position: center; margin-bottom: 10px; display: flex; align-items: flex-end; padding: 10px 12px; font-weight: 800; font-size: 18px; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 2px 6px #000; }
+</style>`);
+
+window.GZW_LAUNCH = { want, cmpV, found, get needRender() { return needRender; }, decorate };
+render();
+setTimeout(maybePopup, 400);
+})();
+</script>
