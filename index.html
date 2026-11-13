@@ -189,6 +189,124 @@ const DATA_SOURCE = "Gray Zone Warfare 0.5 (Rogue Ops) – community data, uncon
 const slug = (name) => String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 const IMG = "https://static.wikia.nocookie.net/gray-zone-warfare/images/";
 
+// Item art from the 111-image review map. Keys are existing item IDs;
+// images are display metadata only and never written into tracker saves.
+// Sources: gzw-data.dev and the Gray Zone Warfare community wiki.
+const ITEM_IMAGE_URLS = Object.freeze({
+  "analog-indicator": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_AnalogIndicator.webp",
+  "burner-head": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_BurnerHead.webp",
+  "chemicals": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Chemicals.webp",
+  "cnc-drill-bits": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_CncDrillBits.webp",
+  "complex-glass-electrode": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_ComplexGlassElectrode.webp",
+  "construction-material": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_ConstructionMaterial.webp",
+  "copper": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Copper.webp",
+  "crystal-prism": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_CrystalPrism.webp",
+  "dynamo": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Dynamo.webp",
+  "fabrics": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Fabrics.webp",
+  "fine-metal-mesh": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_FineMetalMesh.webp",
+  "glass": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Glass.webp",
+  "graphics-card": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_GraphicsCard.webp",
+  "hepa-filter": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_HepaFilter.webp",
+  "laboratory-flask": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_LaboratoryFlask.webp",
+  "laser-tube": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_LaserTube.webp",
+  "mechanical-parts": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_MechanicalParts.webp",
+  "mechanical-pipette": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_MechanicalPipette.webp",
+  "microscope": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Microscope.webp",
+  "motherboard": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_MotherBoard.webp",
+  "motor-oil": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_MotorOil.webp",
+  "multimeter": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Multimeter.webp",
+  "oscilloscope": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Oscilloscope.webp",
+  "pc-fan": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_PcFan.webp",
+  "plastics": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Plastics.webp",
+  "plumbing-parts": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_PlumbingParts.webp",
+  "power-supply": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_PowerSupply.webp",
+  "ram": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Ram.webp",
+  "refrigerant": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Refrigerant.webp",
+  "server-cpu": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_ServerCpu.webp",
+  "signal-generator": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_SignalGenerator.webp",
+  "silicone-sealant": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_SiliconeSealant.webp",
+  "soldering-iron": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_SolderingIron.webp",
+  "stainless-steel-sheet": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_StainlessSteelSheet.webp",
+  "steel": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Steel.webp",
+  "tool-set": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Toolset.webp",
+  "tooling-coolant": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_ToolingCoolant.webp",
+  "us-dollars": "https://gzw-data.dev/assets/items/misc/IS_Misc_Dollars.webp",
+  "vapor-lamp": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_VaporLamp.webp",
+  "water-pump": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_WaterPump.webp",
+  "wood": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Wood.webp",
+  "zinc-electrode": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_ZincElectrode.webp",
+  "ammonium-chloride": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_AmmoniumChloride.webp",
+  "garden-lime": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_GardenLime.webp",
+  "opium-gum": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_OpiumGum.webp",
+  "purified-water": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_PurifiedWater.webp",
+  "aniline": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Aniline.webp",
+  "avionics-processor-board": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_AvionicsProcessorBoard.webp",
+  "bone-density-stimulant": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_BoneDensityStimulant.webp",
+  "bromopyridine": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Bromopyridine.webp",
+  "circuit-board": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_CircuitBoard.webp",
+  "civilian-software": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_CivilianSoftware.webp",
+  "cpu": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Cpu.webp",
+  "cpu-card": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_CpuCard.webp",
+  "digital-synthesis-engine": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_DigitalSynthesisEngine.webp",
+  "electrical-parts": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_ElectricalParts.webp",
+  "empty-auto-injector": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_EmptyAutoinjector.webp",
+  "fpga-module": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_FieldProgrammableGateArray.webp",
+  "glucose": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Glucose.webp",
+  "high-quality-morphine-base": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_HqMorphineBase.webp",
+  "high-speed-digital-processor-board": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_HighSpeedDigitalProcessorBoard.webp",
+  "human-growth-hormone": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_HumanGrowthHormone.webp",
+  "iron-sucrose": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_IronSucrose.webp",
+  "methanol": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Methanol.webp",
+  "methylene-blue": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_MethyleneBlue.webp",
+  "military-software": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_MilitarySoftware.webp",
+  "multi-bus-converter": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_MultibusConverter.webp",
+  "oven-controlled-crystal-oscillator": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_OvenControlledCrystalOscillator.webp",
+  "saline": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Saline.webp",
+  "server-ram-module": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_ServerRamModule.webp",
+  "spoofing-asic-module": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_SpoofingAsic.webp",
+  "theophylline": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Theophylline.webp",
+  "vitamin-b12": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_VitaminB12.webp",
+  "advanced-hacking-tool": "https://static.wikia.nocookie.net/gray-zone-warfare/images/a/a9/Advanced_Hacking_Tool_inspect.png/revision/latest?cb=20261026020132",
+  "basic-hacking-tool": "https://static.wikia.nocookie.net/gray-zone-warfare/images/0/03/Basic_Hacking_Tool_inspect.png/revision/latest?cb=20261109202100",
+  "epo": "https://gzw-data.dev/assets/items/consumables/IS_Med_Stim_Epo.webp",
+  "hpr-3-s": "https://gzw-data.dev/assets/items/consumables/IS_Med_Stim_OrganHealingSubstance.webp",
+  "methylphenidate": "https://gzw-data.dev/assets/items/consumables/IS_Med_Stim_Ritalin.webp",
+  "ori-12": "https://gzw-data.dev/assets/items/consumables/IS_Med_Stim_BoneHealingSubstance.webp",
+  "superior-hacking-tool": "https://static.wikia.nocookie.net/gray-zone-warfare/images/5/5b/Superior_Hacking_Tool_inspect.png/revision/latest?cb=20261028195047",
+  "tracking-tag": "https://gzw-data.dev/assets/items/misc/IS_TrackingTag_GpsTag.webp",
+  "artillery-ballistic-calculator": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_ArtilleryBallisticCalculator.webp",
+  "baget-53-31-onboard-computer": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_Baget5331OnboardComputer.webp",
+  "chemical-containment-container": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_MilitaryChemicalsContainmentCanister.webp",
+  "chemical-munitions-container": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_ChemicalChargesContainer.webp",
+  "counter-ied-jammer-unit": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_CounterIedJammerUnit.webp",
+  "drone-interceptor": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_MilitaryDroneInterceptor.webp",
+  "imsi-catcher": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_ImsiCatcher.webp",
+  "last-line-defense-container": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_LastLineDefenceContainer.webp",
+  "manpack-tactical-radio": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_ManpackTacticalRadio.webp",
+  "missile-seeker-head": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_RocketTargettingHead.webp",
+  "portable-satcom-terminal": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_PortableSatcomTerminal.webp",
+  "radar-signal-processor": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_RadarSignalProcessor.webp",
+  "radioisotope-fuel-cell": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_ThermoelectricGeneratorCell.webp",
+  "st1122-storage-computer": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_St1122StorageComputer.webp",
+  "unlra-field-terminal": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_UnlraFieldTerminal.webp",
+  "ai-targeting-module": "https://static.wikia.nocookie.net/gray-zone-warfare/images/e/ec/AI_Targeting_Module_icon.png/revision/latest?cb=20261024145258",
+  "biohazard-canister": "https://gzw-data.dev/assets/items/misc/IS_Misc_BiohazardMaterialContainer.webp",
+  "deep-space-observation-data-drive": "https://static.wikia.nocookie.net/gray-zone-warfare/images/1/14/Deep-Space_Observation_Data_Drive_icon.png/revision/latest?cb=20261028195056",
+  "electronic-warfare-configuration-drive": "https://static.wikia.nocookie.net/gray-zone-warfare/images/3/35/Electronic_Warfare_Configuration_Drive_icon.png/revision/latest?cb=20261026020130",
+  "encryption-key-drive": "https://static.wikia.nocookie.net/gray-zone-warfare/images/b/ba/Encryption_Key_Drive_icon.png/revision/latest?cb=20261024145222",
+  "flight-data-drive": "https://static.wikia.nocookie.net/gray-zone-warfare/images/4/42/Flight_Data_Drive_icon.png/revision/latest?cb=20261109182702",
+  "incriminating-data-drive": "https://static.wikia.nocookie.net/gray-zone-warfare/images/9/93/Incriminating_Data_Drive_icon.png/revision/latest?cb=20261024145145",
+  "incriminating-phone-logs": "https://static.wikia.nocookie.net/gray-zone-warfare/images/5/5d/Incriminating_Phone_Logs_icon.png/revision/latest?cb=20261107050844",
+  "laf-artillery-data-logs": "https://static.wikia.nocookie.net/gray-zone-warfare/images/f/f1/LAF_Artillery_Data_Logs_icon.png/revision/latest?cb=20261108050430",
+  "missile-guidance-circuit": "https://static.wikia.nocookie.net/gray-zone-warfare/images/9/96/Missile_Guidance_Circuit_icon.png/revision/latest?cb=20261024145310",
+  "nerve-gas-canister": "https://static.wikia.nocookie.net/gray-zone-warfare/images/2/26/Nerve_Gas_Canister_inspect.png/revision/latest/scale-to-width-down/268?cb=20261106141445",
+  "plutonium-canister": "https://gzw-data.dev/assets/items/misc/IS_Misc_PlutoniumCanister.webp",
+  "sarin-canister": "https://static.wikia.nocookie.net/gray-zone-warfare/images/b/be/Sarin_Canister_icon.png/revision/latest?cb=20261104175604",
+  "unlra-relief-manifest": "https://static.wikia.nocookie.net/gray-zone-warfare/images/e/e2/UNLRA_Relief_Manifest_icon.png/revision/latest?cb=20261102054526",
+  "uplink-credentials-drive": "https://static.wikia.nocookie.net/gray-zone-warfare/images/6/61/Uplink_Credentials_Drive_icon.png/revision/latest?cb=20261028195057"
+});
+const itemImage = (id, fallback = "") => ITEM_IMAGE_URLS[id] || fallback;
+
 const CATEGORIES = [
   { id: "building", label: "Building" },
   { id: "production", label: "Production" },
@@ -250,7 +368,10 @@ const RAW_ITEMS = [
   ["ORI-12", "crafted", { info: "Stim · removed from vendors in 0.5" }],
   ["HpR 3-S", "crafted", { info: "Stim · removed from vendors in 0.5" }],
 ];
-const BUILT_IN_ITEMS = RAW_ITEMS.map(([name, category, extra = {}]) => ({ id: slug(name), name, category, step: 1, image: "", info: "", ...extra }));
+const BUILT_IN_ITEMS = RAW_ITEMS.map(([name, category, extra = {}]) => {
+  const id = slug(name);
+  return { id, name, category, step: 1, info: "", ...extra, image: itemImage(id, extra.image || "") };
+});
 const BUILT_IN_BY_ID = Object.fromEntries(BUILT_IN_ITEMS.map((i) => [i.id, i]));
 
 // ---------------- ROOMS, CAPABILITIES ----------------
@@ -1584,7 +1705,7 @@ const NEW_ITEMS = [
 for (const [name, category, info] of NEW_ITEMS) {
   const id = slug(name);
   if (BUILT_IN_BY_ID[id]) continue;
-  const it = { id, name, category, step: 1, image: "", info };
+  const it = { id, name, category, step: 1, image: itemImage(id), info };
   BUILT_IN_ITEMS.push(it); BUILT_IN_BY_ID[id] = it;
 }
 
