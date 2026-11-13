@@ -1,0 +1,11 @@
+{
+  "name": "gzw-companion",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/data.test.mjs",
+    "test:browser": "node --test tests/browser.test.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.65.0"
+  }
+}

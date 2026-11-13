@@ -1,0 +1,671 @@
+[
+  {
+    "id": "generator",
+    "name": "Generator",
+    "room": "utility",
+    "levels": [
+      {
+        "name": "Two-Stroke Engine",
+        "req": {
+          "steel": 1,
+          "mechanical-parts": 1,
+          "motor-oil": 1,
+          "dynamo": 1
+        },
+        "gives": {},
+        "needs": {},
+        "power": 0,
+        "produces": 9
+      },
+      {
+        "name": "Diesel Generator",
+        "req": {
+          "steel": 2,
+          "mechanical-parts": 2,
+          "electrical-parts": 2,
+          "plumbing-parts": 2,
+          "motor-oil": 1,
+          "dynamo": 1
+        },
+        "gives": {},
+        "needs": {},
+        "power": 0,
+        "produces": 18
+      }
+    ]
+  },
+  {
+    "id": "heat-source",
+    "name": "Heat Source",
+    "room": "laboratory",
+    "levels": [
+      {
+        "name": "Open Fire Pit",
+        "req": {
+          "steel": 3,
+          "construction-material": 2,
+          "wood": 1
+        },
+        "gives": {
+          "heat": 1
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      },
+      {
+        "name": "Single Burner",
+        "req": {
+          "steel": 4,
+          "construction-material": 3,
+          "plumbing-parts": 2,
+          "burner-head": 1
+        },
+        "gives": {
+          "heat": 1
+        },
+        "needs": {
+          "safety": 1
+        },
+        "power": 0,
+        "produces": 0
+      },
+      {
+        "name": "Multiple Burner Array",
+        "req": {
+          "steel": 10,
+          "construction-material": 5,
+          "plumbing-parts": 5,
+          "mechanical-parts": 2,
+          "burner-head": 2,
+          "us-dollars": 40000
+        },
+        "gives": {
+          "heat": 2
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "extraction-vessel",
+    "name": "Extraction Vessel",
+    "room": "laboratory",
+    "levels": [
+      {
+        "name": "Oil Tank",
+        "req": {
+          "steel": 1,
+          "copper": 1,
+          "plumbing-parts": 1,
+          "analog-indicator": 1
+        },
+        "gives": {
+          "extraction": 2
+        },
+        "needs": {
+          "heat": 1
+        },
+        "power": 0,
+        "produces": 0
+      },
+      {
+        "name": "Copper Distillation Still",
+        "req": {
+          "copper": 5,
+          "plumbing-parts": 1,
+          "analog-indicator": 1,
+          "water-pump": 1
+        },
+        "gives": {
+          "extraction": 3
+        },
+        "needs": {
+          "heat": 2
+        },
+        "power": 0,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "reaction-vessel",
+    "name": "Reaction Vessel",
+    "room": "laboratory",
+    "levels": [
+      {
+        "name": "Plastic Drums",
+        "req": {
+          "plastics": 2,
+          "construction-material": 1,
+          "silicone-sealant": 1
+        },
+        "gives": {
+          "extraction": 1
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      },
+      {
+        "name": "Galvanized Tank",
+        "req": {
+          "steel": 4,
+          "chemicals": 2,
+          "zinc-electrode": 1
+        },
+        "gives": {
+          "extraction": 1
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      },
+      {
+        "name": "Stainless Steel Tank",
+        "req": {
+          "steel": 12,
+          "mechanical-parts": 6,
+          "stainless-steel-sheet": 3,
+          "us-dollars": 45000
+        },
+        "gives": {
+          "extraction": 2
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "filtration",
+    "name": "Filtration",
+    "room": "laboratory",
+    "levels": [
+      {
+        "name": "Cloth Sheet Filter",
+        "req": {
+          "fabrics": 4,
+          "wood": 2
+        },
+        "gives": {
+          "filtration": 1
+        },
+        "needs": {
+          "extraction": 1
+        },
+        "power": 0,
+        "produces": 0
+      },
+      {
+        "name": "Metal Sieve",
+        "req": {
+          "fine-metal-mesh": 3,
+          "steel": 3
+        },
+        "gives": {
+          "filtration": 1
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "analysis",
+    "name": "Analysis",
+    "room": "laboratory",
+    "levels": [
+      {
+        "name": "PH Meter",
+        "req": {
+          "plastics": 2,
+          "electrical-parts": 1,
+          "circuit-board": 1,
+          "complex-glass-electrode": 1
+        },
+        "gives": {
+          "analysis": 3
+        },
+        "needs": {
+          "analysis": 1
+        },
+        "power": 1,
+        "produces": 0
+      },
+      {
+        "name": "Spectrometer",
+        "req": {
+          "electrical-parts": 4,
+          "circuit-board": 3,
+          "plastics": 2,
+          "mechanical-parts": 2,
+          "crystal-prism": 1,
+          "vapor-lamp": 1,
+          "us-dollars": 35000
+        },
+        "gives": {
+          "analysis": 2
+        },
+        "needs": {
+          "analysis": 5
+        },
+        "power": 1,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "glassware",
+    "name": "Glassware",
+    "room": "laboratory",
+    "levels": [
+      {
+        "name": "Basic Glass Set",
+        "req": {
+          "glass": 1,
+          "plastics": 1,
+          "laboratory-flask": 1
+        },
+        "gives": {
+          "analysis": 1
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      },
+      {
+        "name": "Laboratory Glass Set",
+        "req": {
+          "glass": 2,
+          "plastics": 1,
+          "laboratory-flask": 1,
+          "mechanical-pipette": 1
+        },
+        "gives": {
+          "analysis": 2
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "lab-storage",
+    "name": "Storage (Lab)",
+    "room": "laboratory",
+    "levels": [
+      {
+        "name": "Rusty Old Fridge",
+        "req": {
+          "steel": 1,
+          "electrical-parts": 1,
+          "plumbing-parts": 1,
+          "refrigerant": 1
+        },
+        "gives": {
+          "storage": 1
+        },
+        "needs": {},
+        "power": 1,
+        "produces": 0
+      },
+      {
+        "name": "Beverage Cooler",
+        "req": {
+          "glass": 3,
+          "steel": 3,
+          "plumbing-parts": 2,
+          "electrical-parts": 1,
+          "refrigerant": 1
+        },
+        "gives": {
+          "storage": 3
+        },
+        "needs": {},
+        "power": 1,
+        "produces": 0
+      },
+      {
+        "name": "Laboratory Fridge",
+        "req": {
+          "steel": 6,
+          "glass": 5,
+          "circuit-board": 2,
+          "electrical-parts": 2,
+          "plumbing-parts": 2,
+          "refrigerant": 2,
+          "us-dollars": 45000
+        },
+        "gives": {
+          "storage": 2
+        },
+        "needs": {},
+        "power": 1,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "ventilation",
+    "name": "Ventilation",
+    "room": "laboratory",
+    "levels": [
+      {
+        "name": "Fan",
+        "req": {
+          "electrical-parts": 2,
+          "pc-fan": 2,
+          "plastics": 2
+        },
+        "gives": {
+          "safety": 1
+        },
+        "needs": {},
+        "power": 1,
+        "produces": 0
+      },
+      {
+        "name": "Ventilation",
+        "req": {
+          "steel": 10,
+          "electrical-parts": 5,
+          "plumbing-parts": 5,
+          "pc-fan": 3,
+          "hepa-filter": 1,
+          "us-dollars": 35000
+        },
+        "gives": {
+          "safety": 2
+        },
+        "needs": {},
+        "power": 2,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "hardware",
+    "name": "Hardware",
+    "room": "workshop",
+    "levels": [
+      {
+        "name": "Scavenged PC Rig",
+        "req": {
+          "motherboard": 1,
+          "graphics-card": 1,
+          "cpu": 1,
+          "pc-fan": 1,
+          "ram": 1,
+          "power-supply": 1
+        },
+        "gives": {
+          "compute": 1
+        },
+        "needs": {},
+        "power": 1,
+        "produces": 0
+      },
+      {
+        "name": "High-End Workstation",
+        "req": {
+          "ram": 3,
+          "plumbing-parts": 2,
+          "motherboard": 1,
+          "graphics-card": 1,
+          "cpu": 1,
+          "power-supply": 1
+        },
+        "gives": {
+          "compute": 2
+        },
+        "needs": {},
+        "power": 1,
+        "produces": 0
+      },
+      {
+        "name": "Dedicated Server Rack",
+        "req": {
+          "electrical-parts": 5,
+          "ram": 4,
+          "motherboard": 1,
+          "power-supply": 1,
+          "server-cpu": 1,
+          "us-dollars": 45000
+        },
+        "gives": {
+          "compute": 2
+        },
+        "needs": {},
+        "power": 1,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "software",
+    "name": "Software",
+    "room": "workshop",
+    "levels": [
+      {
+        "name": "Leaked Military Firmware Bypass",
+        "req": {
+          "civilian-software": 3,
+          "military-software": 1
+        },
+        "gives": {
+          "compute": 2
+        },
+        "needs": {
+          "compute": 1
+        },
+        "power": 0,
+        "produces": 0
+      },
+      {
+        "name": "GPU-Accelerated Brute-Force Matrix",
+        "req": {
+          "civilian-software": 6,
+          "military-software": 2,
+          "graphics-card": 1
+        },
+        "gives": {
+          "compute": 2
+        },
+        "needs": {
+          "compute": 5
+        },
+        "power": 0,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "micro-electronics",
+    "name": "Micro Electronics",
+    "room": "workshop",
+    "levels": [
+      {
+        "name": "Basic Electronics Bench",
+        "req": {
+          "soldering-iron": 1,
+          "multimeter": 1,
+          "tool-set": 1,
+          "power-supply": 1,
+          "wood": 1
+        },
+        "gives": {
+          "electronics": 1
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      },
+      {
+        "name": "Advanced Technical Workbench",
+        "req": {
+          "electrical-parts": 4,
+          "soldering-iron": 2,
+          "multimeter": 1,
+          "oscilloscope": 1,
+          "power-supply": 1
+        },
+        "gives": {
+          "electronics": 2
+        },
+        "needs": {},
+        "power": 2,
+        "produces": 0
+      },
+      {
+        "name": "Microelectronics Station",
+        "req": {
+          "electrical-parts": 5,
+          "circuit-board": 2,
+          "microscope": 1,
+          "multimeter": 1,
+          "oscilloscope": 1,
+          "power-supply": 1,
+          "us-dollars": 35000
+        },
+        "gives": {
+          "electronics": 3
+        },
+        "needs": {},
+        "power": 1,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "machine-tools",
+    "name": "Machine Tools",
+    "room": "workshop",
+    "levels": [
+      {
+        "name": "Manual Tooling Rig",
+        "req": {
+          "wood": 1,
+          "steel": 1,
+          "tool-set": 1
+        },
+        "gives": {
+          "mech": 1
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      },
+      {
+        "name": "CNC System",
+        "req": {
+          "steel": 3,
+          "mechanical-parts": 2,
+          "electrical-parts": 1,
+          "cnc-drill-bits": 1,
+          "tooling-coolant": 1
+        },
+        "gives": {
+          "mech": 2
+        },
+        "needs": {},
+        "power": 2,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "rf-sensors",
+    "name": "RF Sensors",
+    "room": "workshop",
+    "levels": [
+      {
+        "name": "Signal Diagnostics Bench",
+        "req": {
+          "electrical-parts": 1,
+          "signal-generator": 1,
+          "soldering-iron": 1,
+          "steel": 1,
+          "wood": 1
+        },
+        "gives": {
+          "rf": 1
+        },
+        "needs": {},
+        "power": 1,
+        "produces": 0
+      },
+      {
+        "name": "Electro-Optics & Radar Suite",
+        "req": {
+          "steel": 6,
+          "electrical-parts": 4,
+          "mechanical-parts": 2,
+          "laser-tube": 1,
+          "oscilloscope": 1,
+          "signal-generator": 1,
+          "us-dollars": 30000
+        },
+        "gives": {
+          "rf": 2
+        },
+        "needs": {},
+        "power": 1,
+        "produces": 0
+      }
+    ]
+  },
+  {
+    "id": "workshop-storage",
+    "name": "Storage (Workshop)",
+    "room": "workshop",
+    "levels": [
+      {
+        "name": "Salvaged Wooden Crate",
+        "req": {
+          "wood": 1,
+          "mechanical-parts": 1
+        },
+        "gives": {
+          "storage": 1
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      },
+      {
+        "name": "Heavy-Duty Steel Locker",
+        "req": {
+          "steel": 9,
+          "mechanical-parts": 3
+        },
+        "gives": {
+          "storage": 3
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      },
+      {
+        "name": "Modified Server Cabinet",
+        "req": {
+          "steel": 12,
+          "stainless-steel-sheet": 4,
+          "mechanical-parts": 6,
+          "us-dollars": 30000
+        },
+        "gives": {
+          "storage": 2
+        },
+        "needs": {},
+        "power": 0,
+        "produces": 0
+      }
+    ]
+  }
+]

@@ -1,0 +1,1776 @@
+diff --git a/index.html b/index.html
+index 0d3f4f9..9575b52 100644
+--- a/index.html
++++ b/index.html
+@@ -26,6 +26,9 @@ h2, h3, h4 { margin: 0; }
+ .topbar h1 { font-size: 18px; margin: 0; flex: 1; letter-spacing: .5px; text-transform: uppercase; }
+ .back { font-size: 22px; padding: 0 6px; text-decoration: none; color: var(--text); }
+ .version { color: var(--muted); font-size: 12px; }
++.image-test-notice { padding:10px 14px; border-bottom:1px solid var(--gold); background:var(--panel-2); color:#f2d28f; font-size:13px; line-height:1.5; }
++.cap-row { align-items:flex-end; }
++.modal-msg, .muted-s { overflow-wrap:anywhere; }
+ .subtabs { display: flex; overflow-x: auto; background: var(--panel); border-bottom: 1px solid var(--border); }
+ .subtabs a { flex: 1; white-space: nowrap; padding: 11px 12px; text-align: center; text-decoration: none; color: var(--muted); border-bottom: 3px solid transparent; }
+ .subtabs a.active { color: var(--text); border-bottom-color: var(--accent); }
+@@ -182,16 +185,21 @@ details.card summary { cursor: pointer; font-weight: 700; }
+ // =============================================================
+ // GAME DATA – edit this part when a game patch changes things
+ // =============================================================
+-const APP_VERSION = "0.1.4";
++const APP_VERSION = "0.1.7";
+ const SAVE_VERSION = 2;
+-const STORAGE_KEY = "gzw-companion";
+-const DATA_SOURCE = "Gray Zone Warfare 0.5 (Rogue Ops) – community data, unconfirmed – Oct 2026";
++// Explicit preview mode never uses the regular tracker's saves or art.
++const IS_IMAGE_TEST = new URLSearchParams(location.search).get("image-test") === "111";
++const STORAGE_KEY = IS_IMAGE_TEST ? "gzw-companion-image-test-111" : "gzw-companion";
++const storageKey = (suffix = "") => STORAGE_KEY + suffix;
++if (IS_IMAGE_TEST) document.title = "GZW Companion — 0.1.7 Test";
++const DATA_SOURCE = "Gray Zone Warfare 0.5.1 — community data checked 14 Nov 2026; uncertain values are marked";
+ const slug = (name) => String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+ const IMG = "https://static.wikia.nocookie.net/gray-zone-warfare/images/";
+ 
+-// Item art from the 111-image review map. Keys are existing item IDs;
++// Item art: the original 111 images plus 24 images for the 0.1.7 catalogue.
++// Keys are stable item IDs;
+ // images are display metadata only and never written into tracker saves.
+-// Sources: gzw-data.dev and the Gray Zone Warfare community wiki.
++// Sources: gzw-data.dev, Gray Zone Warfare community wiki, and gzwitems.com.
+ const ITEM_IMAGE_URLS = Object.freeze({
+   "analog-indicator": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_AnalogIndicator.webp",
+   "burner-head": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_BurnerHead.webp",
+@@ -303,7 +311,31 @@ const ITEM_IMAGE_URLS = Object.freeze({
+   "plutonium-canister": "https://gzw-data.dev/assets/items/misc/IS_Misc_PlutoniumCanister.webp",
+   "sarin-canister": "https://static.wikia.nocookie.net/gray-zone-warfare/images/b/be/Sarin_Canister_icon.png/revision/latest?cb=20261104175604",
+   "unlra-relief-manifest": "https://static.wikia.nocookie.net/gray-zone-warfare/images/e/e2/UNLRA_Relief_Manifest_icon.png/revision/latest?cb=20261102054526",
+-  "uplink-credentials-drive": "https://static.wikia.nocookie.net/gray-zone-warfare/images/6/61/Uplink_Credentials_Drive_icon.png/revision/latest?cb=20261028195057"
++  "uplink-credentials-drive": "https://static.wikia.nocookie.net/gray-zone-warfare/images/6/61/Uplink_Credentials_Drive_icon.png/revision/latest?cb=20261028195057",
++  "10-morphine-solution": "https://gzwitems.com/item-images/10-morphine-solution-icon.png",
++  "acetic-anhydride": "https://gzwitems.com/item-images/acetic-anhydride-icon.png",
++  "advanced-tracking-tag": "https://gzwitems.com/item-images/advanced-tracking-tag-icon.png",
++  "basic-tracking-tag": "https://gzwitems.com/item-images/basic-tracking-tag-icon.png",
++  "chloroform": "https://gzwitems.com/item-images/chloroform-icon.png",
++  "citric-acid": "https://gzwitems.com/item-images/citric-acid-icon.png",
++  "dt-0x": "https://gzwitems.com/item-images/dt-0x-icon.png",
++  "edetate-disodium": "https://gzwitems.com/item-images/edetate-disodium-icon.png",
++  "ether": "https://gzwitems.com/item-images/ether-icon.png",
++  "ethyl-alcohol": "https://gzwitems.com/item-images/ethyl-alcohol-icon.png",
++  "fenethylline": "https://gzwitems.com/item-images/fenethylline-icon.png",
++  "gray-heroin": "https://gzwitems.com/item-images/gray-heroin-icon.png",
++  "hydrochloric-acid": "https://gzwitems.com/item-images/hydrochloric-acid-icon.png",
++  "low-quality-morphine-base": "https://gzwitems.com/item-images/low-quality-morphine-base-icon.png",
++  "medium-quality-morphine-base": "https://gzwitems.com/item-images/medium-quality-morphine-base-icon.png",
++  "methylparaben": "https://gzwitems.com/item-images/methylparaben-icon.png",
++  "morphine": "https://gzwitems.com/item-images/morphine-icon.png",
++  "pure-white-heroin": "https://gzwitems.com/item-images/pure-white-heroin-icon.png",
++  "sodium-carbonate": "https://gzwitems.com/item-images/sodium-carbonate-icon.png",
++  "sodium-citrate": "https://gzwitems.com/item-images/sodium-citrate-icon.png",
++  "stabilized-morphine-sulfate-liquid": "https://gzwitems.com/item-images/stabilized-morphine-sulfate-liquid-icon.png",
++  "strychnine": "https://gzwitems.com/item-images/strychnine-icon.png",
++  "sulfuric-acid": "https://gzwitems.com/item-images/sulfuric-acid-icon.png",
++  "usp-morphine-sulfate": "https://gzwitems.com/item-images/usp-morphine-sulfate-icon.png"
+ });
+ const itemImage = (id, fallback = "") => ITEM_IMAGE_URLS[id] || fallback;
+ 
+@@ -367,6 +399,32 @@ const RAW_ITEMS = [
+   ["EPO", "crafted", { info: "Stim · removed from vendors in 0.5" }],
+   ["ORI-12", "crafted", { info: "Stim · removed from vendors in 0.5" }],
+   ["HpR 3-S", "crafted", { info: "Stim · removed from vendors in 0.5" }],
++
++  // Additional in-game production ingredients and products (0.1.7).
++  ["10% Morphine Solution", "crafted"],
++  ["Acetic Anhydride", "production"],
++  ["Advanced Tracking Tag", "crafted"],
++  ["Basic Tracking Tag", "crafted"],
++  ["Chloroform", "production"],
++  ["Citric Acid", "production"],
++  ["DT-0X", "crafted"],
++  ["Edetate Disodium", "production"],
++  ["Ether", "production"],
++  ["Ethyl Alcohol", "production"],
++  ["Fenethylline", "crafted"],
++  ["Gray Heroin", "crafted"],
++  ["Hydrochloric Acid", "production"],
++  ["Low-Quality Morphine Base", "crafted"],
++  ["Medium-Quality Morphine Base", "crafted"],
++  ["Methylparaben", "production"],
++  ["Morphine", "crafted"],
++  ["Pure White Heroin", "crafted"],
++  ["Sodium Carbonate", "production"],
++  ["Sodium Citrate", "production"],
++  ["Stabilized Morphine Sulfate Liquid", "crafted"],
++  ["Strychnine", "crafted"],
++  ["Sulfuric Acid", "production"],
++  ["USP Morphine Sulfate", "crafted"],
+ ];
+ const BUILT_IN_ITEMS = RAW_ITEMS.map(([name, category, extra = {}]) => {
+   const id = slug(name);
+@@ -402,7 +460,7 @@ const L = (name, req, o = {}) => ({ name, req, gives: o.gives || {}, needs: o.ne
+ const RAW_STATIONS = [
+   ["generator", "Generator", "utility", [
+     L("Two-Stroke Engine", { Steel: 1, "Mechanical Parts": 1, "Motor Oil": 1, Dynamo: 1 }, { produces: 9 }),
+-    L("Diesel Generator", { Steel: 2, "Mechanical Parts": 2, "Electrical Parts": 2, "Plumbing Parts": 2, "Motor Oil": 1, Dynamo: 1 }, { produces: 18, warn: "Fandom lists 1 Plumbing Parts and 1 Electrical Parts (not 2 each)." }),
++    L("Diesel Generator", { Steel: 2, "Mechanical Parts": 2, "Electrical Parts": 2, "Plumbing Parts": 2, "Motor Oil": 1, Dynamo: 1 }, { produces: 18 }),
+   ]],
+   ["heat-source", "Heat Source", "laboratory", [
+     L("Open Fire Pit", { Steel: 3, "Construction Material": 2, Wood: 1 }, { gives: { heat: 1 } }),
+@@ -423,7 +481,7 @@ const RAW_STATIONS = [
+     L("Metal Sieve", { "Fine Metal Mesh": 3, Steel: 3 }, { gives: { filtration: 1 } }),
+   ]],
+   ["analysis", "Analysis", "laboratory", [
+-    L("PH Meter", { Plastics: 2, "Electrical Parts": 1, "Circuit Board": 1, "Complex Glass Electrode": 1 }, { gives: { analysis: 3 }, needs: { analysis: 1 }, power: 1, warn: "Fandom does not list the Complex Glass Electrode." }),
++    L("PH Meter", { Plastics: 2, "Electrical Parts": 1, "Circuit Board": 1, "Complex Glass Electrode": 1 }, { gives: { analysis: 3 }, needs: { analysis: 1 }, power: 1 }),
+     L("Spectrometer", { "Electrical Parts": 4, "Circuit Board": 3, Plastics: 2, "Mechanical Parts": 2, "Crystal Prism": 1, "Vapor Lamp": 1, "US Dollars": 35000 }, { gives: { analysis: 2 }, needs: { analysis: 5 }, power: 1 }),
+   ]],
+   ["glassware", "Glassware", "laboratory", [
+@@ -436,12 +494,12 @@ const RAW_STATIONS = [
+     L("Laboratory Fridge", { Steel: 6, Glass: 5, "Circuit Board": 2, "Electrical Parts": 2, "Plumbing Parts": 2, Refrigerant: 2, "US Dollars": 45000 }, { gives: { storage: 2 }, power: 1 }),
+   ]],
+   ["ventilation", "Ventilation", "laboratory", [
+-    L("Fan", { "Electrical Parts": 2, "PC Fan": 2, Plastics: 2 }, { gives: { safety: 1 }, power: 1, warn: "Fandom lists 2 Mechanical Parts instead of 2 Electrical Parts." }),
+-    L("Ventilation", { Steel: 10, "Electrical Parts": 5, "Plumbing Parts": 5, "PC Fan": 3, "HEPA Filter": 1, "US Dollars": 35000 }, { gives: { safety: 2 }, power: 2 }),
++    L("Fan", { "Electrical Parts": 2, "PC Fan": 2, Plastics: 2 }, { gives: { safety: 1 }, power: 1 }),
++    L("Ventilation", { Steel: 10, "Electrical Parts": 5, "Plumbing Parts": 5, "PC Fan": 3, "HEPA Filter": 1, "US Dollars": 35000 }, { gives: { safety: 2 }, power: 2 , warn: "Some community sources call this upgrade Level III. Its costs are counted once; the extra level is not confirmed." }),
+   ]],
+   ["hardware", "Hardware", "workshop", [
+     L("Scavenged PC Rig", { Motherboard: 1, "Graphics Card": 1, CPU: 1, "PC Fan": 1, RAM: 1, "Power Supply": 1 }, { gives: { compute: 1 }, power: 1 }),
+-    L("High-End Workstation", { RAM: 3, "Plumbing Parts": 2, Motherboard: 1, "Graphics Card": 1, CPU: 1, "Power Supply": 1 }, { gives: { compute: 2 }, power: 1, warn: "Fandom lists 1 RAM (not 3)." }),
++    L("High-End Workstation", { RAM: 3, "Plumbing Parts": 2, Motherboard: 1, "Graphics Card": 1, CPU: 1, "Power Supply": 1 }, { gives: { compute: 2 }, power: 1 }),
+     L("Dedicated Server Rack", { "Electrical Parts": 5, RAM: 4, Motherboard: 1, "Power Supply": 1, "Server CPU": 1, "US Dollars": 45000 }, { gives: { compute: 2 }, power: 1 }),
+   ]],
+   ["software", "Software", "workshop", [
+@@ -451,11 +509,11 @@ const RAW_STATIONS = [
+   ["micro-electronics", "Micro Electronics", "workshop", [
+     L("Basic Electronics Bench", { "Soldering Iron": 1, Multimeter: 1, "Tool Set": 1, "Power Supply": 1, Wood: 1 }, { gives: { electronics: 1 } }),
+     L("Advanced Technical Workbench", { "Electrical Parts": 4, "Soldering Iron": 2, Multimeter: 1, Oscilloscope: 1, "Power Supply": 1 }, { gives: { electronics: 2 }, power: 2 }),
+-    L("Microelectronics Station", { "Electrical Parts": 5, "Circuit Board": 2, Microscope: 1, Multimeter: 1, Oscilloscope: 1, "Power Supply": 1, "US Dollars": 35000 }, { gives: { electronics: 3 }, power: 1, warn: "Fandom does not list the Oscilloscope." }),
++    L("Microelectronics Station", { "Electrical Parts": 5, "Circuit Board": 2, Microscope: 1, Multimeter: 1, Oscilloscope: 1, "Power Supply": 1, "US Dollars": 35000 }, { gives: { electronics: 3 }, power: 1 }),
+   ]],
+   ["machine-tools", "Machine Tools", "workshop", [
+     L("Manual Tooling Rig", { Wood: 1, Steel: 1, "Tool Set": 1 }, { gives: { mech: 1 } }),
+-    L("CNC System", { Steel: 3, "Mechanical Parts": 2, "Electrical Parts": 1, "CNC Drill Bits": 1, "Tooling Coolant": 1 }, { gives: { mech: 2 }, power: 2, warn: "Fandom does not list the 2 Mechanical Parts." }),
++    L("CNC System", { Steel: 3, "Mechanical Parts": 2, "Electrical Parts": 1, "CNC Drill Bits": 1, "Tooling Coolant": 1 }, { gives: { mech: 2 }, power: 2 }),
+   ]],
+   ["rf-sensors", "RF Sensors", "workshop", [
+     L("Signal Diagnostics Bench", { "Electrical Parts": 1, "Signal Generator": 1, "Soldering Iron": 1, Steel: 1, Wood: 1 }, { gives: { rf: 1 }, power: 1 }),
+@@ -464,7 +522,7 @@ const RAW_STATIONS = [
+   ["workshop-storage", "Storage (Workshop)", "workshop", [
+     L("Salvaged Wooden Crate", { Wood: 1, "Mechanical Parts": 1 }, { gives: { storage: 1 } }),
+     L("Heavy-Duty Steel Locker", { Steel: 9, "Mechanical Parts": 3 }, { gives: { storage: 3 } }),
+-    L("Modified Server Cabinet", { Steel: 12, "Stainless Steel Sheet": 4, "Mechanical Parts": 6, "US Dollars": 30000 }, { gives: { storage: 2 }, warn: "Fandom lists $45,000 (not $30,000)." }),
++    L("Modified Server Cabinet", { Steel: 12, "Stainless Steel Sheet": 4, "Mechanical Parts": 6, "US Dollars": 30000 }, { gives: { storage: 2 } }),
+   ]],
+ ];
+ const STATIONS = RAW_STATIONS.map(([id, name, room, levels]) => ({
+@@ -485,25 +543,889 @@ const TOTAL_LEVELS = STATIONS.reduce((n, s) => n + s.levels.length, 0);
+ // station: [ stationId, level ] or null (unknown) · cap: [ capId, min ] or null
+ // time: minutes (0 = unknown, crafts instantly in the app) · power: kW
+ const RAW_RECIPES = [
+-  { id: "basic-hacking-tool", name: "Basic Hacking Tool", room: "workshop", output: ["Basic Hacking Tool", 1],
+-    ingredients: [["Multi-Bus Converter", 1, true], ["CPU Card", 1, true], ["Spoofing ASIC Module", 1, true]],
+-    station: ["micro-electronics", 1], stationGuess: true, needsRecipe: true, task: "Artisan task (name not confirmed)",
+-    notes: "Tier 1. Opens Level 1 keypad doors, 20 s hack. Ingredients are confirmed; amounts and station level are guesses.", source: "tposegaming.com" },
+-  { id: "advanced-hacking-tool", name: "Advanced Hacking Tool", room: "workshop", output: ["Advanced Hacking Tool", 1],
+-    ingredients: [["FPGA Module", 1, true], ["Avionics Processor Board", 1, true], ["Server RAM Module", 1, true]],
+-    station: ["micro-electronics", 2], stationGuess: true, needsRecipe: true, task: "Artisan task (name not confirmed)",
+-    notes: "Tier 2. Opens Level 2 keypad doors, 15 s hack. Ingredients are confirmed; amounts and station level are guesses.", source: "tposegaming.com" },
+-  { id: "superior-hacking-tool", name: "Superior Hacking Tool", room: "workshop", output: ["Superior Hacking Tool", 1],
+-    ingredients: [["High-Speed Digital Processor Board", 1, true], ["Oven-Controlled Crystal Oscillator", 1, true], ["Digital Synthesis Engine", 1, true]],
+-    station: ["micro-electronics", 3], stationGuess: true, needsRecipe: true, task: "Artisan task (name not confirmed)",
+-    notes: "Tier 3. Opens all keypad doors, 10 s hack. Ingredients are confirmed; amounts and station level are guesses.", source: "tposegaming.com" },
+-  { id: "tracking-tag", name: "Tracking Tag", room: "workshop", output: ["Tracking Tag", 1], ingredients: [],
+-    station: null, needsRecipe: true, task: "",
+-    notes: "Vendors no longer sell tracking tags in 0.5, so crafting is the only source. Ingredients not published yet. Tap Edit to fill them in.", source: "grayzonewarfaregame.wiki" },
+-  ...["Methylphenidate", "EPO", "ORI-12", "HpR 3-S"].map((n) => ({
+-    id: slug(n), name: n, room: "laboratory", output: [n, 1], ingredients: [], station: null, needsRecipe: true, task: "",
+-    notes: "Stims were removed from vendors in 0.5. Ingredients not published yet. Likely candidates: Empty Auto Injector, Glucose, Saline, Vitamin B12, Theophylline. Tap Edit to fill them in.",
+-    source: "MADFINGER changelog" })),
++  {
++    "id": "basic-hacking-tool",
++    "name": "Basic Hacking Tool",
++    "room": "workshop",
++    "output": [
++      "Basic Hacking Tool",
++      1
++    ],
++    "ingredients": [
++      [
++        "Multi-Bus Converter",
++        1,
++        false
++      ],
++      [
++        "CPU Card",
++        1,
++        false
++      ],
++      [
++        "Spoofing ASIC Module",
++        1,
++        false
++      ]
++    ],
++    "caps": [
++      {
++        "id": "mech",
++        "min": 1
++      },
++      {
++        "id": "compute",
++        "min": 1
++      }
++    ],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Open Channels",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "community-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "advanced-hacking-tool",
++    "name": "Advanced Hacking Tool",
++    "room": "workshop",
++    "output": [
++      "Advanced Hacking Tool",
++      1
++    ],
++    "ingredients": [
++      [
++        "FPGA Module",
++        1,
++        false
++      ],
++      [
++        "Avionics Processor Board",
++        1,
++        false
++      ],
++      [
++        "Server RAM Module",
++        1,
++        false
++      ]
++    ],
++    "caps": [
++      {
++        "id": "compute",
++        "min": 5
++      }
++    ],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Wider Reach",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "community-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "superior-hacking-tool",
++    "name": "Superior Hacking Tool",
++    "room": "workshop",
++    "output": [
++      "Superior Hacking Tool",
++      1
++    ],
++    "ingredients": [
++      [
++        "Oven-Controlled Crystal Oscillator",
++        1,
++        false
++      ],
++      [
++        "High-Speed Digital Processor Board",
++        1,
++        false
++      ],
++      [
++        "Digital Synthesis Engine",
++        1,
++        false
++      ]
++    ],
++    "caps": [
++      {
++        "id": "compute",
++        "min": 9
++      }
++    ],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Unrestricted Access",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "community-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "advanced-tracking-tag",
++    "name": "Advanced Tracking Tag",
++    "room": "workshop",
++    "output": [
++      "Advanced Tracking Tag",
++      1
++    ],
++    "ingredients": [
++      [
++        "Electrical Parts",
++        1,
++        false
++      ],
++      [
++        "Military Software",
++        1,
++        false
++      ],
++      [
++        "CPU",
++        1,
++        false
++      ]
++    ],
++    "caps": [],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Precision Work",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "not-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "tracking-tag",
++    "name": "Tracking Tag",
++    "room": "workshop",
++    "output": [
++      "Tracking Tag",
++      1
++    ],
++    "ingredients": [
++      [
++        "Electrical Parts",
++        1,
++        false
++      ],
++      [
++        "Civilian Software",
++        1,
++        false
++      ],
++      [
++        "Circuit Board",
++        1,
++        false
++      ]
++    ],
++    "caps": [],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Applied Engineering",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "not-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "basic-tracking-tag",
++    "name": "Basic Tracking Tag",
++    "room": "workshop",
++    "output": [
++      "Basic Tracking Tag",
++      1
++    ],
++    "ingredients": [
++      [
++        "Electrical Parts",
++        1,
++        false
++      ],
++      [
++        "Civilian Software",
++        1,
++        false
++      ]
++    ],
++    "caps": [],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Technical Foundation",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "not-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "ori-12",
++    "name": "ORI-12",
++    "room": "laboratory",
++    "output": [
++      "ORI-12",
++      1
++    ],
++    "ingredients": [
++      [
++        "Empty Auto Injector",
++        1,
++        false
++      ],
++      [
++        "Bone Density Stimulant",
++        1,
++        false
++      ]
++    ],
++    "caps": [],
++    "station": null,
++    "needsRecipe": true,
++    "task": "New Batch: ORI-12",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "not-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "dt-0x",
++    "name": "DT-0X",
++    "room": "laboratory",
++    "output": [
++      "DT-0X",
++      1
++    ],
++    "ingredients": [
++      [
++        "Empty Auto Injector",
++        1,
++        false
++      ],
++      [
++        "Methylene Blue",
++        1,
++        false
++      ]
++    ],
++    "caps": [],
++    "station": null,
++    "needsRecipe": true,
++    "task": "New Batch: DT-0X",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "not-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "epo",
++    "name": "EPO",
++    "room": "laboratory",
++    "output": [
++      "EPO",
++      1
++    ],
++    "ingredients": [
++      [
++        "Empty Auto Injector",
++        1,
++        false
++      ],
++      [
++        "Vitamin B12",
++        1,
++        false
++      ],
++      [
++        "Iron Sucrose",
++        1,
++        false
++      ]
++    ],
++    "caps": [],
++    "station": null,
++    "needsRecipe": true,
++    "task": "New Batch: EPO",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "not-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "fenethylline",
++    "name": "Fenethylline",
++    "room": "laboratory",
++    "output": [
++      "Fenethylline",
++      1
++    ],
++    "ingredients": [
++      [
++        "Glucose",
++        1,
++        false
++      ],
++      [
++        "Theophylline",
++        1,
++        false
++      ]
++    ],
++    "caps": [],
++    "station": null,
++    "needsRecipe": true,
++    "task": "New Batch: Fenethylline",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "not-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "morphine",
++    "name": "Morphine",
++    "room": "laboratory",
++    "output": [
++      "Morphine",
++      1
++    ],
++    "ingredients": [
++      [
++        "Empty Auto Injector",
++        1,
++        false
++      ],
++      [
++        "High-Quality Morphine Base",
++        1,
++        false
++      ],
++      [
++        "Saline",
++        1,
++        false
++      ]
++    ],
++    "caps": [],
++    "station": null,
++    "needsRecipe": true,
++    "task": "New Batch: Morphine",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "not-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "hpr-3-s",
++    "name": "HpR 3-S",
++    "room": "laboratory",
++    "output": [
++      "HpR 3-S",
++      1
++    ],
++    "ingredients": [
++      [
++        "Empty Auto Injector",
++        1,
++        false
++      ],
++      [
++        "Human Growth Hormone",
++        1,
++        false
++      ]
++    ],
++    "caps": [],
++    "station": null,
++    "needsRecipe": true,
++    "task": "New Batch: HpR 3-S",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "not-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "methylphenidate",
++    "name": "Methylphenidate",
++    "room": "laboratory",
++    "output": [
++      "Methylphenidate",
++      1
++    ],
++    "ingredients": [
++      [
++        "Glucose",
++        1,
++        false
++      ],
++      [
++        "Bromopyridine",
++        1,
++        false
++      ]
++    ],
++    "caps": [],
++    "station": null,
++    "needsRecipe": true,
++    "task": "New Batch: Methylphenidate",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "not-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "strychnine",
++    "name": "Strychnine",
++    "room": "laboratory",
++    "output": [
++      "Strychnine",
++      1
++    ],
++    "ingredients": [
++      [
++        "Empty Auto Injector",
++        1,
++        false
++      ],
++      [
++        "Aniline",
++        1,
++        false
++      ],
++      [
++        "Methanol",
++        1,
++        false
++      ]
++    ],
++    "caps": [],
++    "station": null,
++    "needsRecipe": true,
++    "task": "New Batch: Strychnine",
++    "time": 0.016666666666666666,
++    "timeUnconfirmed": false,
++    "requirementStatus": "not-listed",
++    "notes": "No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "gray-heroin",
++    "name": "Gray Heroin",
++    "room": "laboratory",
++    "output": [
++      "Gray Heroin",
++      1
++    ],
++    "ingredients": [
++      [
++        "Medium-Quality Morphine Base",
++        1,
++        false
++      ],
++      [
++        "Acetic Anhydride",
++        1,
++        false
++      ],
++      [
++        "Sodium Carbonate",
++        1,
++        false
++      ],
++      [
++        "Chloroform",
++        1,
++        false
++      ]
++    ],
++    "caps": [
++      {
++        "id": "filtration",
++        "min": 2
++      },
++      {
++        "id": "analysis",
++        "min": 4
++      }
++    ],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Diversification",
++    "time": 120.0,
++    "timeUnconfirmed": true,
++    "requirementStatus": "community-listed",
++    "notes": "Community production duration; exact November patch duration has no official per-item table. No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "high-quality-morphine-base",
++    "name": "High-Quality Morphine Base",
++    "room": "laboratory",
++    "output": [
++      "High-Quality Morphine Base",
++      1
++    ],
++    "ingredients": [
++      [
++        "Opium Gum",
++        1,
++        false
++      ],
++      [
++        "Garden Lime",
++        1,
++        false
++      ],
++      [
++        "Ammonium Chloride",
++        1,
++        false
++      ],
++      [
++        "Purified Water",
++        1,
++        false
++      ]
++    ],
++    "caps": [
++      {
++        "id": "heat",
++        "min": 4
++      },
++      {
++        "id": "extraction",
++        "min": 8
++      }
++    ],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Higher Standards",
++    "time": 120.0,
++    "timeUnconfirmed": true,
++    "requirementStatus": "community-listed",
++    "notes": "Community production duration; exact November patch duration has no official per-item table. No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "low-quality-morphine-base",
++    "name": "Low-Quality Morphine Base",
++    "room": "laboratory",
++    "output": [
++      "Low-Quality Morphine Base",
++      1
++    ],
++    "ingredients": [
++      [
++        "Opium Gum",
++        1,
++        false
++      ],
++      [
++        "Garden Lime",
++        1,
++        false
++      ],
++      [
++        "Ammonium Chloride",
++        1,
++        false
++      ],
++      [
++        "Purified Water",
++        1,
++        false
++      ]
++    ],
++    "caps": [
++      {
++        "id": "heat",
++        "min": 1
++      },
++      {
++        "id": "extraction",
++        "min": 3
++      },
++      {
++        "id": "filtration",
++        "min": 1
++      },
++      {
++        "id": "safety",
++        "min": 1
++      }
++    ],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Proof of Concept",
++    "time": 60.0,
++    "timeUnconfirmed": true,
++    "requirementStatus": "community-listed",
++    "notes": "Community production duration; exact November patch duration has no official per-item table. No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "10-morphine-solution",
++    "name": "10% Morphine Solution",
++    "room": "laboratory",
++    "output": [
++      "10% Morphine Solution",
++      1
++    ],
++    "ingredients": [
++      [
++        "Low-Quality Morphine Base",
++        1,
++        false
++      ],
++      [
++        "Citric Acid",
++        1,
++        false
++      ],
++      [
++        "Purified Water",
++        1,
++        false
++      ]
++    ],
++    "caps": [
++      {
++        "id": "analysis",
++        "min": 1
++      },
++      {
++        "id": "storage",
++        "min": 1
++      }
++    ],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Means of Production",
++    "time": 90.0,
++    "timeUnconfirmed": true,
++    "requirementStatus": "community-listed",
++    "notes": "Community production duration; exact November patch duration has no official per-item table. No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "medium-quality-morphine-base",
++    "name": "Medium-Quality Morphine Base",
++    "room": "laboratory",
++    "output": [
++      "Medium-Quality Morphine Base",
++      1
++    ],
++    "ingredients": [
++      [
++        "Opium Gum",
++        1,
++        false
++      ],
++      [
++        "Garden Lime",
++        1,
++        false
++      ],
++      [
++        "Ammonium Chloride",
++        1,
++        false
++      ],
++      [
++        "Purified Water",
++        1,
++        false
++      ]
++    ],
++    "caps": [
++      {
++        "id": "heat",
++        "min": 2
++      },
++      {
++        "id": "extraction",
++        "min": 7
++      },
++      {
++        "id": "filtration",
++        "min": 1
++      }
++    ],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Refining the Process",
++    "time": 90.0,
++    "timeUnconfirmed": true,
++    "requirementStatus": "community-listed",
++    "notes": "Community production duration; exact November patch duration has no official per-item table. No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "pure-white-heroin",
++    "name": "Pure White Heroin",
++    "room": "laboratory",
++    "output": [
++      "Pure White Heroin",
++      1
++    ],
++    "ingredients": [
++      [
++        "High-Quality Morphine Base",
++        1,
++        false
++      ],
++      [
++        "Acetic Anhydride",
++        1,
++        false
++      ],
++      [
++        "Ether",
++        1,
++        false
++      ],
++      [
++        "Hydrochloric Acid",
++        1,
++        false
++      ],
++      [
++        "Ethyl Alcohol",
++        1,
++        false
++      ]
++    ],
++    "caps": [
++      {
++        "id": "filtration",
++        "min": 2
++      },
++      {
++        "id": "analysis",
++        "min": 8
++      },
++      {
++        "id": "safety",
++        "min": 3
++      }
++    ],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Premium Product",
++    "time": 150.0,
++    "timeUnconfirmed": true,
++    "requirementStatus": "community-listed",
++    "notes": "Community production duration; exact November patch duration has no official per-item table. No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "stabilized-morphine-sulfate-liquid",
++    "name": "Stabilized Morphine Sulfate Liquid",
++    "room": "laboratory",
++    "output": [
++      "Stabilized Morphine Sulfate Liquid",
++      1
++    ],
++    "ingredients": [
++      [
++        "Medium-Quality Morphine Base",
++        1,
++        false
++      ],
++      [
++        "Sulfuric Acid",
++        1,
++        false
++      ],
++      [
++        "Methylparaben",
++        1,
++        false
++      ],
++      [
++        "Saline",
++        1,
++        false
++      ]
++    ],
++    "caps": [
++      {
++        "id": "analysis",
++        "min": 3
++      },
++      {
++        "id": "storage",
++        "min": 4
++      }
++    ],
++    "station": null,
++    "needsRecipe": true,
++    "task": "Expanding Operations",
++    "time": 120.0,
++    "timeUnconfirmed": true,
++    "requirementStatus": "community-listed",
++    "notes": "Community production duration; exact November patch duration has no official per-item table. No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  },
++  {
++    "id": "usp-morphine-sulfate",
++    "name": "USP Morphine Sulfate",
++    "room": "laboratory",
++    "output": [
++      "USP Morphine Sulfate",
++      1
++    ],
++    "ingredients": [
++      [
++        "High-Quality Morphine Base",
++        1,
++        false
++      ],
++      [
++        "Sulfuric Acid",
++        1,
++        false
++      ],
++      [
++        "Sodium Citrate",
++        1,
++        false
++      ],
++      [
++        "Edetate Disodium",
++        1,
++        false
++      ]
++    ],
++    "caps": [
++      {
++        "id": "storage",
++        "min": 6
++      }
++    ],
++    "station": null,
++    "needsRecipe": true,
++    "task": "The Price of Progress",
++    "time": 150.0,
++    "timeUnconfirmed": true,
++    "requirementStatus": "community-listed",
++    "notes": "Community production duration; exact November patch duration has no official per-item table. No specific station level is published; capability requirements are used when listed.",
++    "source": "https://gzwitems.com/hideout/crafting"
++  }
+ ];
+ function buildRecipe(r) {
+   const chk = (n) => { if (!BUILT_IN_BY_ID[slug(n)]) console.warn("Unknown item in recipe " + r.name + ": " + n); return slug(n); };
+@@ -514,6 +1436,7 @@ function buildRecipe(r) {
+     station: r.station ? { id: r.station[0], level: r.station[1] } : null,
+     stationGuess: !!r.stationGuess,
+     cap: r.cap ? { id: r.cap[0], min: r.cap[1] } : null,
++    caps: r.caps || [], timeUnconfirmed: !!r.timeUnconfirmed, requirementStatus: r.requirementStatus || "",
+     needsRecipe: !!r.needsRecipe, task: r.task || "", power: r.power || 0, time: r.time || 0,
+     notes: r.notes || "", source: r.source || "",
+   };
+@@ -537,12 +1460,13 @@ function fmtDur(ms) {
+   return h ? h + "h " + m + "m" : m ? m + "m " + sec + "s" : sec + "s";
+ }
+ function fmtMinutes(min) {
+-  if (!min) return "unknown";
+-  const h = Math.floor(min / 60), m = min % 60;
+-  return ((h ? h + "h " : "") + (m ? m + "m" : "")).trim();
++  const seconds = Math.max(0, Math.round(Number(min || 0) * 60));
++  if (!seconds) return "unknown";
++  const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), sec = seconds % 60;
++  return [h ? h + "h" : "", m ? m + "m" : "", sec ? sec + "s" : ""].filter(Boolean).join(" ");
+ }
+ 
+-// Typo-friendly search: "stl" and "steal" both find Steel
++// Typo-friendly search:// Typo-friendly search: "stl" and "steal" both find Steel
+ function lev(a, b) {
+   const d = Array.from({ length: b.length + 1 }, (_, i) => i);
+   for (let i = 1; i <= a.length; i++) {
+@@ -595,6 +1519,12 @@ function cleanItem(i) {
+   return { id: String(i.id), name: String(i.name).slice(0, 60), category: CATEGORIES.some((c) => c.id === i.category) ? i.category : "other",
+     image: String(i.image || ""), info: String(i.info || "").slice(0, 300), step: Math.max(1, int(i.step) || 1), custom: true };
+ }
++function recipeRequirements(r) {
++  const raw = arr(r.caps).length ? r.caps : r.cap ? [r.cap] : [];
++  const byId = {};
++  for (const cap of raw) if (isObj(cap) && CAP_BY_ID[cap.id]) byId[cap.id] = Math.max(byId[cap.id] || 0, Math.max(1, int(cap.min) || 1));
++  return Object.entries(byId).map(([id, min]) => ({ id, min }));
++}
+ function cleanRecipe(r) {
+   if (!isObj(r) || !r.id || !r.name) return null;
+   const st = isObj(r.station) && STATION_BY_ID[r.station.id] ? STATION_BY_ID[r.station.id] : null;
+@@ -607,16 +1537,21 @@ function cleanRecipe(r) {
+     stationGuess: !!r.stationGuess,
+     cap: isObj(r.cap) && CAP_BY_ID[r.cap.id] ? { id: r.cap.id, min: Math.max(1, int(r.cap.min) || 1) } : null,
+     needsRecipe: !!r.needsRecipe, task: String(r.task || "").slice(0, 120),
+-    power: Math.max(0, Number(r.power) || 0), time: Math.max(0, Math.round(Number(r.time) || 0)),
++    power: Math.max(0, Number(r.power) || 0), time: Math.max(0, Math.round((Number.isFinite(Number(r.time)) ? Number(r.time) : 0) * 60) / 60),
+     notes: String(r.notes || "").slice(0, 600), source: String(r.source || "").slice(0, 120),
++    ...(Array.isArray(r.caps) ? { caps: recipeRequirements({ caps: r.caps }) } : {}),
++    ...(typeof r.timeUnconfirmed === "boolean" ? { timeUnconfirmed: r.timeUnconfirmed } : {}),
++    ...(r.requirementStatus ? { requirementStatus: String(r.requirementStatus).slice(0, 60) } : {}),
+   };
+ }
+ // Makes sure saved data is valid and adds any new items from the game data
+ function normalize(raw) {
+   const r = isObj(raw) ? raw : {};
+   const s = defaultState();
+-  s.customItems = arr(r.customItems).map(cleanItem).filter((i) => i && !BUILT_IN_BY_ID[i.id]);
+-  const ids = [...BUILT_IN_ITEMS.map((i) => i.id), ...s.customItems.map((i) => i.id)];
++  // Keep user entries even if a new catalogue item now has the same ID.
++  // Their counts, images and recipe references keep their original IDs.
++  s.customItems = arr(r.customItems).map(cleanItem).filter(Boolean);
++  const ids = [...new Set([...BUILT_IN_ITEMS.map((i) => i.id), ...s.customItems.map((i) => i.id)])];
+   const valid = new Set(ids);
+   for (const [k, v] of Object.entries(isObj(r.counts) ? r.counts : {})) { const n = Math.max(0, int(v)); if (n && valid.has(k)) s.counts[k] = n; }
+   s.favorites = [...new Set(arr(r.favorites).filter((id) => valid.has(id)))];
+@@ -626,7 +1561,7 @@ function normalize(raw) {
+   const lv = isObj(r.stationLevels) ? r.stationLevels : {};
+   for (const st of STATIONS) { const n = clamp(int(lv[st.id]), 0, st.levels.length); if (n) s.stationLevels[st.id] = n; }
+   s.pins = [...new Set(arr(r.pins || r.pinned || r.pinnedStations).filter((id) => STATION_BY_ID[id]))];
+-  s.customRecipes = arr(r.customRecipes).map(cleanRecipe).filter((x) => x && !BUILT_IN_RECIPE_BY_ID[x.id]);
++  s.customRecipes = arr(r.customRecipes).map(cleanRecipe).filter(Boolean);
+   for (const [id, rec] of Object.entries(isObj(r.recipeOverrides) ? r.recipeOverrides : {})) {
+     if (!BUILT_IN_RECIPE_BY_ID[id]) continue;
+     const c = cleanRecipe({ ...rec, id }); if (c) s.recipeOverrides[id] = c;
+@@ -675,16 +1610,16 @@ let state = loadState();
+ // =============================================================
+ // GAME LOGIC
+ // =============================================================
+-const getItem = (id) => BUILT_IN_BY_ID[id] || state.customItems.find((i) => i.id === id) || null;
++const getItem = (id) => state.customItems.find((i) => i.id === id) || BUILT_IN_BY_ID[id] || null;
+ const itemName = (id) => (getItem(id) ? getItem(id).name : id + " (deleted item)");
+-const allItems = () => [...BUILT_IN_ITEMS, ...state.customItems];
++const allItems = () => [...BUILT_IN_ITEMS.filter((i) => !state.customItems.some((c) => c.id === i.id)), ...state.customItems];
+ const have = (id) => state.counts[id] || 0;
+ const lvl = (stId) => state.stationLevels[stId] || 0;
+ const fmtAmt = (id, n) => (getItem(id) && getItem(id).money ? "$" + fmt(n) : fmt(n));
+ function setCountRaw(id, n) { n = Math.max(0, int(n)); if (n) state.counts[id] = n; else delete state.counts[id]; }
+ 
+ function allRecipes() {
+-  const out = BUILT_IN_RECIPES.map((r) => state.recipeOverrides[r.id]
++  const out = BUILT_IN_RECIPES.filter((r) => !state.customRecipes.some((c) => c.id === r.id)).map((r) => state.recipeOverrides[r.id]
+     ? { ...state.recipeOverrides[r.id], builtIn: true, edited: true }
+     : { ...r, builtIn: true, edited: false });
+   for (const r of state.customRecipes) out.push({ ...r, custom: true });
+@@ -754,7 +1689,7 @@ function unlocksOf(st) {
+ }
+ function recipeHardOk(r, levels, caps) {
+   const stOk = !r.station || (levels[r.station.id] || 0) >= r.station.level;
+-  const capOk = !r.cap || (caps[r.cap.id] || 0) >= r.cap.min;
++  const capOk = recipeRequirements(r).every((cap) => (caps[cap.id] || 0) >= cap.min);
+   return stOk && capOk;
+ }
+ 
+@@ -762,7 +1697,7 @@ function recipeInfo(r, n = 1) {
+   const caps = capabilities(), pw = power(), flags = state.recipeFlags[r.id] || {};
+   const stCur = r.station ? lvl(r.station.id) : 0;
+   const stationOk = !r.station || stCur >= r.station.level;
+-  const capOk = !r.cap || (caps[r.cap.id] || 0) >= r.cap.min;
++  const capOk = recipeRequirements(r).every((cap) => (caps[cap.id] || 0) >= cap.min);
+   const foundOk = !r.needsRecipe || !!flags.found;
+   const taskOk = !r.task || !!flags.task;
+   const missing = r.ingredients.filter((x) => have(x.item) < x.qty * n);
+@@ -770,7 +1705,7 @@ function recipeInfo(r, n = 1) {
+   const powerOver = r.power > 0 && r.power > spare;
+   const incomplete = !r.ingredients.length || !r.output;
+   const status = incomplete ? "incomplete" : !stationOk || !capOk ? "locked" : !foundOk || !taskOk ? "needs" : missing.length ? "missing" : "craftable";
+-  return { status, stCur, stationOk, capOk, capHave: r.cap ? caps[r.cap.id] || 0 : 0, foundOk, taskOk, missing, spare, powerOver, incomplete, flags };
++  return { status, stCur, stationOk, capOk, capDetails: recipeRequirements(r).map((cap) => ({ ...cap, have: caps[cap.id] || 0, ok: (caps[cap.id] || 0) >= cap.min })), capHave: r.cap ? caps[r.cap.id] || 0 : 0, foundOk, taskOk, missing, spare, powerOver, incomplete, flags };
+ }
+ 
+ // How many of each item you still need.
+@@ -1111,13 +2046,13 @@ function recipeVisible() {
+ function recipeCard(r, i) {
+   const blockers = [];
+   if (r.station && !i.stationOk) blockers.push(`❌ ${esc(STATION_BY_ID[r.station.id].name)} L${r.station.level}`);
+-  if (r.cap && !i.capOk) blockers.push(`❌ ${esc(capName(r.cap.id))} ≥ ${r.cap.min}`);
++  for (const cap of i.capDetails) if (!cap.ok) blockers.push(`❌ ${esc(capName(cap.id))} ≥ ${cap.min}`);
+   if (!i.foundOk) blockers.push("❌ Recipe not found");
+   if (!i.taskOk) blockers.push("❌ Task: " + esc(r.task));
+   const haveN = r.ingredients.filter((x) => have(x.item) >= x.qty).length;
+   return `<a class="card station-card ${i.status}" href="#/hideout/recipe/${encodeURIComponent(r.id)}">
+     <div class="sc-top"><span class="sc-name">${esc(r.name)}${recipeTags(r)}</span><span class="badge ${i.status}">${STATUS[i.status]}</span></div>
+-    <div class="sc-sub">${ROOM_BY_ID[r.room].icon} ${esc(ROOM_BY_ID[r.room].name)}${r.output ? ` · makes ${esc(itemName(r.output.item))} ×${r.output.qty}` : ""}${r.time ? " · ⏱ " + fmtMinutes(r.time) : ""}</div>
++    <div class="sc-sub">${ROOM_BY_ID[r.room].icon} ${esc(ROOM_BY_ID[r.room].name)}${r.output ? ` · makes ${esc(itemName(r.output.item))} ×${r.output.qty}` : ""}${r.time ? " · ⏱ " + fmtMinutes(r.time) + (r.timeUnconfirmed ? " · community estimate" : "") : ""}</div>
+     <div class="sc-sub">${r.ingredients.length ? `Ingredients: ${haveN} / ${r.ingredients.length} ready` : "Ingredients unknown – tap Edit to add"}</div>
+     ${blockers.length ? `<div class="sc-sub">${blockers.join(" · ")}</div>` : ""}</a>`;
+ }
+@@ -1129,7 +2064,7 @@ function renderCraftList() {
+ function renderCrafting() {
+   const p = state.prefs, all = allRecipes().map((r) => recipeInfo(r));
+   const counts = (s) => all.filter((i) => i.status === s).length;
+-  return `${!p.hideCraftNote ? `<div class="banner"><div>📝 <b>Most recipe data isn't published yet.</b> Recipes are items you find in the world, and some come from Artisan tasks. Hacking tool ingredients are confirmed; amounts, station levels and times are guesses. Use <b>Edit</b> to fix a recipe – your fix is kept even when the app's data updates.</div><button class="x" data-act="hide-craft-note" aria-label="Hide">✕</button></div>` : ""}
++  return `${!p.hideCraftNote ? `<div class="banner"><div>📝 <b>22 community-documented recipes.</b> Ingredients and unlock missions were checked on 14 Nov 2026. Production times marked “community estimate” need in-game confirmation. Only published capability requirements are checked; specific station levels remain unconfirmed. Use <b>Edit</b> to keep your own corrections.</div><button class="x" data-act="hide-craft-note" aria-label="Hide">✕</button></div>` : ""}
+   ${jobsCard()}
+   <div class="toolbar">
+     <div class="toolbar-row"><input class="search" id="craft-search" data-input="craft-search" type="search" placeholder="🔍 Search recipes..." value="${esc(ui.craftQuery)}">
+@@ -1153,12 +2088,12 @@ function renderRecipe(id) {
+       ${pinQ ? `<span class="stepper"><button class="btn" data-act="pin-qty" data-id="${esc(r.id)}" data-d="-1">−</button><b>×${pinQ}</b><button class="btn" data-act="pin-qty" data-id="${esc(r.id)}" data-d="1">+</button></span>` : ""}
+     </div>
+     <h3 style="margin-top:12px">Requirements</h3><ul class="req">
+-      ${st ? `<li>${ok(i.stationOk)} <a href="#/hideout/station/${st.id}">${esc(st.name)}</a> Level ≥ ${r.station.level} (you: ${i.stCur})${r.stationGuess ? ' <span class="tag">guess</span>' : ""}</li>` : `<li>❔ Station requirement unknown</li>`}
+-      ${r.cap ? `<li>${ok(i.capOk)} ${esc(capName(r.cap.id))} ≥ ${r.cap.min} (you: ${i.capHave})${i.capOk ? "" : `<ul class="ways">${waysToRaise(r.cap.id).map((w) => `<li><a href="#/hideout/station/${w.st.id}">${esc(w.st.name)} L${w.level}</a> (+${w.gives})</li>`).join("")}</ul>`}</li>` : ""}
++      ${st ? `<li>${ok(i.stationOk)} <a href="#/hideout/station/${st.id}">${esc(st.name)}</a> Level ≥ ${r.station.level} (you: ${i.stCur})${r.stationGuess ? ' <span class="tag">guess</span>' : ""}</li>` : `<li class="muted-s">${i.capDetails.length ? "Uses the capability requirements below; no specific station level is listed." : "No specific capability or station level is listed by the source."}</li>`}
++      ${i.capDetails.map((cap) => `<li>${ok(cap.ok)} ${esc(capName(cap.id))} ≥ ${cap.min} (you: ${cap.have})${cap.ok ? "" : `<ul class="ways">${waysToRaise(cap.id).map((w) => `<li><a href="#/hideout/station/${w.st.id}">${esc(w.st.name)} L${w.level}</a> (+${w.gives})</li>`).join("")}</ul>`}</li>`).join("")}
+       ${r.needsRecipe ? `<li><label class="check"><input type="checkbox" data-change="flag" data-id="${esc(r.id)}" data-flag="found" ${i.flags.found ? "checked" : ""}> 📜 I've found / learned this recipe</label></li>` : ""}
+       ${r.task ? `<li><label class="check"><input type="checkbox" data-change="flag" data-id="${esc(r.id)}" data-flag="task" ${i.flags.task ? "checked" : ""}> 🎯 Task done: ${esc(r.task)}</label></li>` : ""}
+       <li>⚡ Power: ${r.power ? `${r.power} kW (spare: ${i.spare} kW)${i.powerOver ? ' <span class="over">– not enough</span>' : ""}` : "none recorded"}</li>
+-      <li>⏱ Craft time: ${r.time ? fmtMinutes(r.time) + (n > 1 ? ` × ${n} = ${fmtMinutes(r.time * n)}` : "") : "unknown (crafts instantly in the app)"}</li>
++      <li>⏱ Craft time: ${r.time ? fmtMinutes(r.time) + (n > 1 ? ` × ${n} = ${fmtMinutes(r.time * n)}` : "") : "unknown (crafts instantly in the app)"}${r.timeUnconfirmed ? " · community estimate" : ""}</li>
+     </ul>`;
+   if (!r.ingredients.length) {
+     h += `<p class="hint">❔ Ingredients for this recipe haven't been published yet. Tap <b>Edit recipe</b> to add them when you see them in-game.</p>`;
+@@ -1175,7 +2110,7 @@ function renderRecipe(id) {
+   const blockedHard = i.incomplete || !i.stationOk || !i.capOk || i.missing.length > 0;
+   h += `<div id="build-area"><button class="btn primary build-btn" data-act="craft" data-id="${esc(r.id)}" ${blockedHard ? "disabled" : ""}>🛠 Craft${n > 1 ? " ×" + n : ""}</button>
+     ${i.incomplete ? `<p class="build-note">Add ingredients and an output with Edit recipe first.</p>` : ""}
+-    ${!i.incomplete && (!i.stationOk || !i.capOk) ? `<p class="build-warn">🔒 Locked – ${!i.stationOk ? `build ${esc(st.name)} to Level ${r.station.level} first` : `raise ${esc(capName(r.cap.id))} to ${r.cap.min}`}.</p>` : ""}
++    ${!i.incomplete && (!i.stationOk || !i.capOk) ? `<p class="build-warn">🔒 Locked – ${!i.stationOk ? `build ${esc(st.name)} to Level ${r.station.level} first` : i.capDetails.filter((cap) => !cap.ok).map((cap) => `raise ${esc(capName(cap.id))} to ${cap.min}`).join(", ")}.</p>` : ""}
+     ${!i.incomplete && i.stationOk && i.capOk && i.missing.length ? `<p class="build-note">Missing: ${i.missing.map((x) => `${esc(itemName(x.item))} (${have(x.item)}/${x.qty * n})`).join(", ")}</p>` : ""}
+     ${!blockedHard && (!i.foundOk || !i.taskOk) ? `<p class="build-note">📜 Not ticked: ${[!i.foundOk ? "recipe found" : "", !i.taskOk ? "task done" : ""].filter(Boolean).join(" and ")}. You can still craft.</p>` : ""}
+   </div></div>`;
+@@ -1211,6 +2146,9 @@ function openItemForm(id) {
+     <p class="error" id="form-error"></p>
+     <div class="modal-buttons"><button type="submit" class="btn primary">Save</button><button type="button" class="btn" data-act="modal-close">Cancel</button></div></form>`);
+ }
++function capRowHtml(cap) {
++  return `<div class="cap-row two"><label>Capability<select class="cap-id">${['<option value="">None</option>', ...CAPS.map((c) => `<option value="${c.id}" ${cap && cap.id === c.id ? "selected" : ""}>${esc(c.name)}</option>`)].join("")}</select></label><label class="narrow">≥<input class="cap-min" type="number" min="1" value="${cap ? cap.min : 1}"></label><button class="btn" type="button" data-act="cap-remove" aria-label="Remove capability">✕</button></div>`;
++}
+ function openRecipeForm(id) {
+   const r = id ? getRecipe(id) : null;
+   const kind = !r ? "new" : r.custom ? "custom" : "builtin";
+@@ -1229,13 +2167,14 @@ function openRecipeForm(id) {
+     <div class="two"><label>Station needed<select name="station"><option value="">None / unknown</option>${stOpts}</select></label>
+       <label class="narrow">Level<input name="stationLevel" type="number" min="1" max="3" value="${v.station ? v.station.level : 1}"></label></div>
+     <label class="check"><input type="checkbox" name="stationGuess" ${v.stationGuess ? "checked" : ""}> Station level is a guess</label>
+-    <div class="two"><label>Capability needed<select name="cap"><option value="">None</option>${CAPS.map((c) => `<option value="${c.id}" ${v.cap && v.cap.id === c.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>
+-      <label class="narrow">≥<input name="capMin" type="number" min="1" value="${v.cap ? v.cap.min : 1}"></label></div>
++    <div><b>Capability requirements</b><div id="cap-rows">${(recipeRequirements(v).length ? recipeRequirements(v) : [null]).map(capRowHtml).join("")}</div><button type="button" class="btn" data-act="cap-add">＋ Add capability</button></div>
+     <label class="check"><input type="checkbox" name="needsRecipe" ${v.needsRecipe ? "checked" : ""}> Needs the recipe item (found in the world)</label>
+     <label>Task / mission needed (optional)<input name="task" maxlength="120" value="${esc(v.task)}" placeholder="e.g. Artisan – task name"></label>
+     <div class="two"><label>Craft time hours<input name="hours" type="number" min="0" value="${Math.floor((v.time || 0) / 60)}"></label>
+-      <label>minutes<input name="minutes" type="number" min="0" max="59" value="${(v.time || 0) % 60}"></label>
+-      <label>Power kW<input name="power" type="number" min="0" step="0.5" value="${v.power || 0}"></label></div>
++      <label>minutes<input name="minutes" type="number" min="0" max="59" value="${Math.floor((v.time || 0) % 60)}"></label>
++      <label>seconds<input name="seconds" type="number" min="0" max="59" value="${Math.round((v.time || 0) * 60) % 60}"></label></div>
++    <label class="check"><input type="checkbox" name="timeUnconfirmed" ${v.timeUnconfirmed ? "checked" : ""}> Duration is a community estimate</label>
++    <label>Power kW<input name="power" type="number" min="0" step="0.5" value="${v.power || 0}"></label>
+     <label>Notes<textarea name="notes" rows="2">${esc(v.notes)}</textarea></label>
+     <p class="error" id="form-error"></p>
+     <div class="modal-buttons"><button type="submit" class="btn primary">Save</button><button type="button" class="btn" data-act="modal-close">Cancel</button></div></form>`);
+@@ -1265,7 +2204,7 @@ function render() {
+     title = t ? t.label : "Not found"; back = "#/";
+     body = `<main class="page">${comingSoon(title)}</main>`;
+   }
+-  document.getElementById("app").innerHTML = `<header class="topbar">${back ? `<a class="back" href="${back}" aria-label="Back">←</a>` : ""}<h1>${esc(title)}</h1><span class="version">v${APP_VERSION}</span></header>${body}`;
++  document.getElementById("app").innerHTML = `<header class="topbar">${back ? `<a class="back" href="${back}" aria-label="Back">←</a>` : ""}<h1>${esc(title)}</h1><span class="version">v${APP_VERSION}</span></header>${IS_IMAGE_TEST ? '<aside class="image-test-notice" role="note"><b>0.1.7 test tracker</b> · Changes save to separate test data on this device.</aside>' : ""}${body}`;
+ }
+ function commit() { saveState(); render(); }
+ const snapshot = () => JSON.stringify(state);
+@@ -1378,9 +2317,11 @@ const ACTIONS = {
+     confirmBox("Delete material?", `Delete <b>${esc(itemName(id))}</b>? Recipes that use it will show it as a deleted item.`, "Delete", () => {
+       const snap = snapshot();
+       state.customItems = state.customItems.filter((i) => i.id !== id);
+-      state.favorites = state.favorites.filter((x) => x !== id);
+-      state.order = state.order.filter((x) => x !== id);
+-      delete state.counts[id];
++      if (!BUILT_IN_BY_ID[id]) {
++        state.favorites = state.favorites.filter((x) => x !== id);
++        state.order = state.order.filter((x) => x !== id);
++        delete state.counts[id];
++      }
+       commit(); showToast("Material deleted", snap, "del");
+     }, true);
+   },
+@@ -1474,6 +2415,8 @@ const ACTIONS = {
+       commit(); showToast("Craft cancelled, ingredients returned", snap, "cancel");
+     }, true);
+   },
++  "cap-add"() { document.getElementById("cap-rows").insertAdjacentHTML("beforeend", capRowHtml(null)); },
++  "cap-remove"(el) { el.closest(".cap-row").remove(); },
+   "add-recipe"() { openRecipeForm(null); },
+   "edit-recipe"(el) { openRecipeForm(el.dataset.id); },
+   "reset-recipe"(el) {
+@@ -1607,14 +2550,15 @@ document.addEventListener("submit", (e) => {
+       seen.add(item); ings.push({ item, qty, unsure });
+     });
+     if (ings.some((x) => x.item === outItem)) return formError("A recipe can't use the item it makes.");
+-    const stId = g("station"), capId = g("cap"), kindR = f.dataset.kind;
++    const stId = g("station"), kindR = f.dataset.kind;
++    const requiredCaps = [...f.querySelectorAll(".cap-row")].map((row) => ({ id: row.querySelector(".cap-id").value, min: row.querySelector(".cap-min").value })).filter((cap) => cap.id);
+     const id = kindR === "new" ? "custom-recipe-" + uid() : f.dataset.id;
+     const base = kindR === "builtin" ? BUILT_IN_RECIPE_BY_ID[id] : null;
+     const rec = cleanRecipe({
+       id, name, room: g("room"), output: { item: outItem, qty: g("outQty") }, ingredients: ings,
+       station: stId ? { id: stId, level: g("stationLevel") } : null, stationGuess: fd.get("stationGuess") === "on",
+-      cap: capId ? { id: capId, min: g("capMin") } : null, needsRecipe: fd.get("needsRecipe") === "on", task: g("task"),
+-      power: g("power"), time: int(g("hours")) * 60 + clamp(int(g("minutes")), 0, 59), notes: g("notes"), source: base ? base.source : "Added by you",
++      cap: requiredCaps.length === 1 ? requiredCaps[0] : null, ...(requiredCaps.length > 1 ? { caps: requiredCaps } : {}), timeUnconfirmed: fd.get("timeUnconfirmed") === "on", needsRecipe: fd.get("needsRecipe") === "on", task: g("task"),
++      power: g("power"), time: int(g("hours")) * 60 + clamp(int(g("minutes")), 0, 59) + clamp(int(g("seconds")), 0, 59) / 60, notes: g("notes"), source: base ? base.source : "Added by you",
+     });
+     if (kindR === "builtin") state.recipeOverrides[id] = rec;
+     else if (kindR === "custom") state.customRecipes = state.customRecipes.map((r) => (r.id === id ? rec : r));
+@@ -1677,14 +2621,14 @@ render();
+ // =============================================================
+ (() => {
+ "use strict";
+-const DIS_DEFAULT_MIN = 720; // 12 hours
++const DIS_DEFAULT_MIN = 720; // Legacy fallback for user-created entries without a saved duration
+ 
+ // ---------- New inventory categories & items ----------
+ const otherAt = CATEGORIES.findIndex((c) => c.id === "other");
+ CATEGORIES.splice(otherAt < 0 ? CATEGORIES.length : otherAt, 0,
+   { id: "disassembly", label: "Disassemble" }, { id: "intel", label: "Intel & Canisters" });
+ 
+-const IN_INFO = "Disassemble in the Electronics Workshop (~12 h)";
++const IN_INFO = "Disassemble in the Electronics Workshop; see Disassembly for item-specific community timings";
+ const OUT_INFO = "From disassembly · likely a sell / smuggling item";
+ const NEW_ITEMS = [
+   ["Artillery Ballistic Calculator", "disassembly", IN_INFO], ["Baget-53-31 Onboard Computer", "disassembly", IN_INFO],
+@@ -1710,32 +2654,294 @@ for (const [name, category, info] of NEW_ITEMS) {
+ }
+ 
+ // ---------- Disassembly data (edit here after game patches) ----------
+-// [ item you disassemble, [ [output, amount], ... ], notes ]
+-const RAW_DIS = [
+-  ["Artillery Ballistic Calculator", [["LAF Artillery Data Logs", 1], ["CPU Card", 1]], "One source says the Artillery Ballistic Computer gives a CPU Card (needed for the Basic Hacking Tool). Not confirmed – check in-game."],
+-  ["Baget-53-31 Onboard Computer", [["Flight Data Drive", 1], ["Avionics Processor Board", 1]]],
+-  ["Chemical Munitions Container", [["Sarin Canister", 1]]],
+-  ["Counter IED/Jammer Unit", [["Electronic Warfare Configuration Drive", 1], ["Digital Synthesis Engine", 1]]],
+-  ["Drone Interceptor", [["AI Targeting Module", 1]]],
+-  ["IMSI Catcher", [["Incriminating Phone Logs", 1], ["Spoofing ASIC Module", 1]]],
+-  ["Last Line Defense Container", [["Nerve Gas Canister", 1]]],
+-  ["Manpack Tactical Radio", [["Encryption Key Drive", 1], ["FPGA Module", 1]]],
+-  ["Chemical Containment Container", [["Biohazard Canister", 1]]],
+-  ["Portable SATCOM Terminal", [["Uplink Credentials Drive", 1], ["Oven-Controlled Crystal Oscillator", 1]]],
+-  ["Radar Signal Processor", [["Deep-Space Observation Data Drive", 1], ["High-Speed Digital Processor Board", 1]]],
+-  ["Missile Seeker Head", [["Missile Guidance Circuit", 1]]],
+-  ["ST1122 Storage Computer", [["Incriminating Data Drive", 1], ["Server RAM Module", 1]]],
+-  ["Radioisotope Fuel Cell", [["Plutonium Canister", 1]]],
+-  ["UNLRA Field Terminal", [["UNLRA Relief Manifest", 1], ["Multi-Bus Converter", 1]]],
++// Community catalogue checked 14 Nov 2026; uncertainties are retained in each entry.
++const DIS_BUILT_IN = [
++  {
++    "id": "dis-artillery-ballistic-calculator",
++    "input": "artillery-ballistic-calculator",
++    "outputs": [
++      {
++        "item": "laf-artillery-data-logs",
++        "qty": 1,
++        "unsure": true
++      },
++      {
++        "item": "cpu-card",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 240.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: Sawmill, YBL-1.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-baget-53-31-onboard-computer",
++    "input": "baget-53-31-onboard-computer",
++    "outputs": [
++      {
++        "item": "flight-data-drive",
++        "qty": 1,
++        "unsure": true
++      },
++      {
++        "item": "avionics-processor-board",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 360.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: Fort Narith.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-chemical-munitions-container",
++    "input": "chemical-munitions-container",
++    "outputs": [
++      {
++        "item": "sarin-canister",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 360.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: .",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-counter-ied-jammer-unit",
++    "input": "counter-ied-jammer-unit",
++    "outputs": [
++      {
++        "item": "electronic-warfare-configuration-drive",
++        "qty": 1,
++        "unsure": true
++      },
++      {
++        "item": "digital-synthesis-engine",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 480.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: Northern Reach.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-drone-interceptor",
++    "input": "drone-interceptor",
++    "outputs": [
++      {
++        "item": "ai-targeting-module",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 360.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: Midnight Sapphire.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-imsi-catcher",
++    "input": "imsi-catcher",
++    "outputs": [
++      {
++        "item": "incriminating-phone-logs",
++        "qty": 1,
++        "unsure": true
++      },
++      {
++        "item": "spoofing-asic-module",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 240.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: Pha Lang Airfield, Hunter's Paradise.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-last-line-defense-container",
++    "input": "last-line-defense-container",
++    "outputs": [
++      {
++        "item": "nerve-gas-canister",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 480.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: RLSL-1 Radio Telescope.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-manpack-tactical-radio",
++    "input": "manpack-tactical-radio",
++    "outputs": [
++      {
++        "item": "encryption-key-drive",
++        "qty": 1,
++        "unsure": true
++      },
++      {
++        "item": "fpga-module",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 360.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: Tiger Bay.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-chemical-containment-container",
++    "input": "chemical-containment-container",
++    "outputs": [
++      {
++        "item": "biohazard-canister",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 480.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: Lakevale Sanctuary.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-portable-satcom-terminal",
++    "input": "portable-satcom-terminal",
++    "outputs": [
++      {
++        "item": "uplink-credentials-drive",
++        "qty": 1,
++        "unsure": true
++      },
++      {
++        "item": "oven-controlled-crystal-oscillator",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 480.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: Lakevale Sanctuary.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-radar-signal-processor",
++    "input": "radar-signal-processor",
++    "outputs": [
++      {
++        "item": "deep-space-observation-data-drive",
++        "qty": 1,
++        "unsure": true
++      },
++      {
++        "item": "high-speed-digital-processor-board",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 480.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: RLSL-1 Radio Telescope.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-missile-seeker-head",
++    "input": "missile-seeker-head",
++    "outputs": [
++      {
++        "item": "missile-guidance-circuit",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 360.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: Fort Narith.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-st1122-storage-computer",
++    "input": "st1122-storage-computer",
++    "outputs": [
++      {
++        "item": "incriminating-data-drive",
++        "qty": 1,
++        "unsure": true
++      },
++      {
++        "item": "server-ram-module",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 360.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: Midnight Sapphire.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-radioisotope-fuel-cell",
++    "input": "radioisotope-fuel-cell",
++    "outputs": [
++      {
++        "item": "plutonium-canister",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 480.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: Northern Reach.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  },
++  {
++    "id": "dis-unlra-field-terminal",
++    "input": "unlra-field-terminal",
++    "outputs": [
++      {
++        "item": "unlra-relief-manifest",
++        "qty": 1,
++        "unsure": true
++      },
++      {
++        "item": "multi-bus-converter",
++        "qty": 1,
++        "unsure": true
++      }
++    ],
++    "time": 240.0,
++    "timeUnconfirmed": true,
++    "station": null,
++    "notes": "Community duration; exact hours are not published in the official patch notes. Output quantities of 1 are documented in the October launch-build reference and remain marked unconfirmed. Workshop is listed; a station level is not published. Location: Blue Lagoon, Ban Pa.",
++    "source": "https://gzwitems.com/hideout/disassembly"
++  }
+ ];
+-const DIS_BUILT_IN = RAW_DIS.map(([input, outs, notes]) => ({
+-  id: "dis-" + slug(input), input: slug(input),
+-  outputs: outs.map(([n, q]) => {
+-    if (!BUILT_IN_BY_ID[slug(n)]) console.warn("Unknown disassembly output: " + n);
+-    return { item: slug(n), qty: q, unsure: true };
+-  }),
+-  time: DIS_DEFAULT_MIN, station: null, notes: notes || "", source: "grayzonewarfaregame.wiki",
+-}));
+ const DIS_BY_ID = Object.fromEntries(DIS_BUILT_IN.map((r) => [r.id, r]));
+ 
+ function cleanDis(r) {
+@@ -1745,6 +2951,7 @@ function cleanDis(r) {
+     id: String(r.id), input: String(r.input),
+     outputs: arr(r.outputs).filter((x) => isObj(x) && x.item).map((x) => ({ item: String(x.item), qty: Math.max(1, int(x.qty) || 1), unsure: !!x.unsure })),
+     time: Math.max(1, Math.round(Number(r.time) || DIS_DEFAULT_MIN)),
++    ...(typeof r.timeUnconfirmed === "boolean" ? { timeUnconfirmed: r.timeUnconfirmed } : {}),
+     station: st ? { id: st.id, level: clamp(int(r.station.level) || 1, 1, st.levels.length) } : null,
+     notes: String(r.notes || "").slice(0, 600), source: String(r.source || "").slice(0, 120),
+   };
+@@ -1876,7 +3083,7 @@ function disCard(r) {
+   const label = !stOk ? "🔒 Locked" : h > 0 ? `🟢 You have ${h}` : "⚪ None in inventory";
+   return `<a class="card station-card ${cls}" href="#/hideout/dis/${encodeURIComponent(r.id)}">
+     <div class="sc-top"><span class="sc-name">${esc(disName(r))}${disTags(r)}</span><span class="badge ${cls}">${label}</span></div>
+-    <div class="sc-sub">→ ${outText(r)} · ⏱ ${fmtMinutes(r.time)}</div>
++    <div class="sc-sub">→ ${outText(r)} · ⏱ ${fmtMinutes(r.time)}${r.timeUnconfirmed ? " · community estimate" : ""}</div>
+     ${!stOk ? `<div class="sc-sub">❌ Needs ${esc(STATION_BY_ID[r.station.id].name)} L${r.station.level}</div>` : ""}
+     ${useful.length ? `<div class="sc-sub">📌 Gives ${useful.map((o) => esc(itemName(o.item))).join(", ")} for your pinned goals</div>` : ""}
+     ${stOk && h > 0 ? `<div class="inline"><button class="btn" data-act="dis-add" data-id="${esc(r.id)}" data-n="1">＋ Queue 1</button></div>` : ""}
+@@ -1888,7 +3095,7 @@ function renderDisList() {
+ }
+ function renderDisassembly() {
+   const p = state.prefs;
+-  return `${!p.hideDisNote ? `<div class="banner"><div>🔩 <b>How disassembly works:</b> it runs in the Electronics Workshop, takes about 12 h per item and keeps going while you're offline. Items closest to the top-left of the grid go first, and moving an item resets its timer. Results go to Workshop storage – tap <b>Collect</b> when you take them out. Output amounts are unconfirmed (×1?).</div><button class="x" data-act="dis-hide-note" aria-label="Hide">✕</button></div>` : ""}
++  return `${!p.hideDisNote ? `<div class="banner"><div>🔩 <b>How disassembly works:</b> it runs in the Electronics Workshop and keeps going while you're offline. Community timings are 4, 6 or 8 h by item, following the November patch; exact times and output quantities remain unconfirmed. Existing queued jobs retain their saved timers. New jobs use the listed duration. Results go to Workshop storage – tap <b>Collect</b> when you take them out. Output amounts are unconfirmed (×1?).</div><button class="x" data-act="dis-hide-note" aria-label="Hide">✕</button></div>` : ""}
+   ${disQueueCard()}
+   <div class="card"><div class="summary-row"><span>Items disassembled at the same time</span>
+     <select data-change="dis-slots">${[1, 2, 3, 4, 5, 6].map((n) => `<option value="${n}" ${p.disSlots === n ? "selected" : ""}>${n}</option>`).join("")}</select></div>
+@@ -1908,7 +3115,7 @@ function renderDisRecipe(id) {
+   const can = stOk && h >= n && r.outputs.length > 0;
+   return `<a class="crumb" href="#/hideout/disassembly">← Disassembly</a>
+   <div class="card"><div class="sd-head"><div><h2>${esc(disName(r))}${disTags(r)}</h2>
+-    <div class="muted-s">🔧 Electronics Workshop · ⏱ ${fmtMinutes(r.time)} each</div></div></div>
++    <div class="muted-s">🔧 Electronics Workshop · ⏱ ${fmtMinutes(r.time)} each${r.timeUnconfirmed ? " · community estimate" : ""}</div></div></div>
+     <ul class="req">
+       ${st ? `<li>${ok(stOk)} <a href="#/hideout/station/${st.id}">${esc(st.name)}</a> Level ≥ ${r.station.level} (you: ${lvl(st.id)})</li>` : `<li>❔ Station requirement unknown</li>`}
+       ${n > 1 ? `<li>⏱ ×${n} takes about ${fmtMinutes(r.time * Math.ceil(n / (state.prefs.disSlots || 1)))} in total</li>` : ""}
+@@ -1942,6 +3149,7 @@ function openDisForm(id) {
+       <p class="muted-s">Output not in the list? Add it first in Inventory → ＋ Add.</p></div>
+     <div class="two"><label>Time hours<input name="hours" type="number" min="0" value="${Math.floor(v.time / 60)}"></label>
+       <label>minutes<input name="minutes" type="number" min="0" max="59" value="${v.time % 60}"></label></div>
++    <label class="check"><input type="checkbox" name="timeUnconfirmed" ${v.timeUnconfirmed ? "checked" : ""}> Duration is a community estimate</label>
+     <div class="two"><label>Station needed<select name="station"><option value="">None / unknown</option>${stOpts}</select></label>
+       <label class="narrow">Level<input name="stationLevel" type="number" min="1" max="3" value="${v.station ? v.station.level : 1}"></label></div>
+     <label>Notes<textarea name="notes" rows="2">${esc(v.notes)}</textarea></label>
+@@ -2097,7 +3305,7 @@ document.addEventListener("submit", (e) => {
+   const stId = g("station"), base = DIS_BY_ID[id];
+   const rec = cleanDis({
+     id, input, outputs: outs, time: int(g("hours")) * 60 + clamp(int(g("minutes")), 0, 59),
+-    station: stId ? { id: stId, level: g("stationLevel") } : null, notes: g("notes"), source: base ? base.source : "Added by you",
++    station: stId ? { id: stId, level: g("stationLevel") } : null, timeUnconfirmed: fd.get("timeUnconfirmed") === "on", notes: g("notes"), source: base ? base.source : "Added by you",
+   });
+   if (kind === "builtin") state.disOverrides[id] = rec;
+   else if (kind === "custom") state.disCustom = state.disCustom.map((r) => (r.id === id ? rec : r));
+@@ -2132,7 +3340,7 @@ render();
+ // =============================================================
+ (() => {
+ "use strict";
+-const ART_KEY = "gzw-companion-art";
++const ART_KEY = storageKey("-art");
+ const STYLE_END = "gritty realistic military art, muted olive green and khaki, foggy Southeast Asian jungle, film grain, moody lighting, no text, no logos";
+ const S = (id, group, label, where, shape, aspect, max, prompt, extra = {}) => ({ id, group, label, where, shape, aspect, max, prompt, ...extra });
+ const ART_SLOTS = [
+@@ -2313,7 +3521,7 @@ render = function () {
+     const h1 = document.querySelector("#app .topbar h1"); if (h1) h1.textContent = "Art & look";
+     const page = document.querySelector("#app main.page"); if (page) page.innerHTML = renderArt();
+   }
+-  const v = document.querySelector("#app .version"); if (v) v.textContent = "v0.1.5";
++  const v = document.querySelector("#app .version"); if (v) v.textContent = "v" + APP_VERSION;
+ };
+ 
+ const artFile = document.createElement("input");
+@@ -2401,14 +3609,15 @@ render();
+ // =============================================================
+ (() => {
+ "use strict";
+-const VERSION = "0.1.6";
++const VERSION = "0.1.7";
+ const SITE = "https://readyplayer99.github.io/gzw-companion/";
+ const REPO = "https://github.com/Readyplayer99/gzw-companion";
+ // Paste your Google Form link between the quotes to use it for the 💬 button:
+ const FEEDBACK_URL = "";
+-const SEEN_KEY = "gzw-companion-seen";
++const SEEN_KEY = storageKey("-seen");
+ const DISCLAIMER = "Unofficial community-made tool. Not affiliated with or endorsed by MADFINGER Games.";
+ const CHANGES = [
++  ["0.1.7", ["22 documented crafts and 15 updated disassembly recipes", "All 111 existing item images plus 24 new item images", "Multiple capability requirements, second-based crafts and preserved saved progress"]],
+   ["0.1.6", ["Built-in artwork that everyone sees", "💬 Feedback button (top right)", "About and What's new screens"]],
+   ["0.1.5", ["🎨 Art & look: add your own pictures"]],
+   ["0.1.4", ["🔩 Disassembly tab with a queue and timers that run while you're offline"]],
+@@ -2578,13 +3787,14 @@ loadDefaults();
+ (() => {
+ "use strict";
+ // ---------- Settings: change these if you need to ----------
+-const VERSION = "0.1.6";
++const VERSION = "0.1.7";
+ const SITE = "https://readyplayer99.github.io/gzw-companion/";
+ const FEEDBACK_URL = ""; // paste your Google Form link between the quotes, e.g. "https://forms.gle/abc123"
+ const REPO_URL = "https://github.com/Readyplayer99/gzw-companion";
+ const ABOUT = "Free GZW hideout tracker. Track materials, station upgrades, crafting and disassembly timers, and pin goals for a shopping list. Coming soon: player stats, weapon builder and loot prices. I made it because I kept losing track of what my hideout needed.";
+ const DISCLAIMER = "Unofficial community-made tool. Not affiliated with or endorsed by MADFINGER Games.";
+ const CHANGELOG = [
++  { v: "0.1.7", items: ["22 documented crafting and production recipes", "15 disassembly recipes with individual community-estimated timings", "135 item images, including the original 111", "Multiple requirements and second-based craft timers; existing saves and custom corrections kept"] },
+   { v: "0.1.6", items: ["Built-in art: everyone now sees the pictures", "💬 Feedback, ℹ️ About and 📰 What's new on the home screen", "Fan-made disclaimer"] },
+   { v: "0.1.5", items: ["🎨 Art & look: add your own pictures (they replace the built-in ones on your device)"] },
+   { v: "0.1.4", items: ["🔩 Disassembly tab: queue, timers that keep running while you're away, Collect"] },
+@@ -2594,8 +3804,8 @@ const CHANGELOG = [
+ // ---------- Built-in art, loaded from the app's website ----------
+ // Each picture is looked for as <slot name> + one of these endings, in this order.
+ const EXTS = [".jpg", ".jpeg", ".webp", ".jpg.jpg", ".png.jpg", ".png", ".jpg.png", ".png.png"];
+-const FILES_KEY = "gzw-companion-art-files";
+-const SEEN_KEY = "gzw-companion-seen";
++const FILES_KEY = storageKey("-art-files");
++const SEEN_KEY = storageKey("-seen");
+ let cache = {};
+ try { cache = JSON.parse(localStorage.getItem(FILES_KEY) || "{}") || {}; } catch (e) { cache = {}; }
+ const found = {}, pending = new Set();
