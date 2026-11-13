@@ -302,3 +302,73 @@ test('new disassembly defaults apply only to new jobs and keep uncertainty when 
  assert.equal((await storedState(page)).disOverrides['dis-artillery-ballistic-calculator'].timeUnconfirmed,true);
  assert.equal((await storedState(page)).disOverrides['dis-artillery-ballistic-calculator'].time,240);
 });
+
+test('Home downloads a full backup with progress, queues, custom data and uploaded artwork; restore and undo work',async(t)=>{
+ const seed=fullSave();
+ const image='data:image/png;base64,'+png.toString('base64');
+ const art=JSON.stringify({v:1,slots:{banner:image,bg:image}});
+ const page=await pageFor(t,{seed:{[liveKey]:JSON.stringify(seed),[liveKey+'-art']:art}});
+ await page.goto(origin+'/index.html#/');
+ const downloadPromise=page.waitForEvent('download');
+ await page.locator('.backup-actions [data-act="export"]').click();
+ const download=await downloadPromise;
+ assert.match(download.suggestedFilename(),/^gzw-companion-full-backup-.*\.json$/);
+ const exported=JSON.parse(await readFile(await download.path(),'utf8'));
+ assert.equal(exported.backupVersion,1);assert.equal(exported.deviceStorage.art,art);
+ for(const field of ['counts','customItems','customRecipes','recipePins','recipeFlags','stationLevels','jobs','disQueue'])assertPreserved(seed[field],exported.state[field],field);
+ await page.evaluate(()=>{state.counts.steel=99;state.prefs.sort='az';localStorage.setItem(storageKey('-art'),JSON.stringify({v:1,slots:{bg:'https://example.test/changed-bg.png'}}));window.GZW_ART_STATE.reload();saveState();render();});
+ const changedArt=await page.evaluate(()=>localStorage.getItem(storageKey('-art')));
+ await page.evaluate(text=>restore(text),JSON.stringify(exported));
+ await page.locator('[data-act="modal-ok"]').click();
+ assert.equal(await page.evaluate(()=>have('steel')),14);
+ assert.equal(await page.evaluate(()=>localStorage.getItem(storageKey('-art'))),art);
+ assert.deepEqual(await page.evaluate(()=>window.GZW_ART_STATE.art),{banner:image,bg:image});
+ assert.ok((await page.locator('body').getAttribute('style')).includes('data:image/png'),'restored uploaded background is visible');
+ await page.locator('[data-act="undo"]').click();
+ assert.equal(await page.evaluate(()=>have('steel')),99);
+ assert.equal(await page.evaluate(()=>localStorage.getItem(storageKey('-art'))),changedArt);
+ assert.deepEqual(await page.evaluate(()=>window.GZW_ART_STATE.art),{bg:'https://example.test/changed-bg.png'});
+});
+
+test('older tracker-only backups restore without deleting saved artwork',async(t)=>{
+ const art=JSON.stringify({v:1,slots:{banner:'https://example.test/keep-art.png'}});
+ const page=await pageFor(t,{seed:{[liveKey+'-art']:art}});
+ const legacy={app:'gzw-companion',appVersion:'0.1.6',state:fullSave()};
+ await page.evaluate(text=>restore(text),JSON.stringify(legacy));
+ assert.match(await page.locator('#modal-root').innerText(),/artwork is kept/i);
+ await page.locator('[data-act="modal-ok"]').click();
+ assert.equal(await page.evaluate(()=>have('steel')),14);
+ assert.equal(await page.evaluate(()=>localStorage.getItem(storageKey('-art'))),art);
+});
+
+test('full restore in preview writes only preview keys and preserves regular data',async(t)=>{
+ const live={ [liveKey]:JSON.stringify(fullSave()),[liveKey+'-art']:JSON.stringify({v:1,slots:{banner:'https://example.test/live-only.png'}}),[liveKey+'-seen']:'0.1.7',[liveKey+'-art-files']:JSON.stringify({icon:'https://example.test/live-icon.png'}),unrelated:'keep-other-app'};
+ const page=await pageFor(t,{preview:true,seed:live});
+ const next=fullSave();next.counts.steel=27;
+ const full={app:'gzw-companion',backupVersion:1,state:next,deviceStorage:{art:JSON.stringify({v:1,slots:{banner:'https://example.test/imported.png'}}),seen:'0.1.7',artFiles:null}};
+ await page.evaluate(text=>restore(text),JSON.stringify(full));await page.locator('[data-act="modal-ok"]').click();
+ assert.equal(await page.evaluate(()=>have('steel')),27);
+ const actual=await page.evaluate(()=>Object.fromEntries(Object.entries(localStorage)));
+ for(const[k,v]of Object.entries(live))assert.equal(actual[k],v,k);
+ assert.equal(actual[previewKey+'-art'],full.deviceStorage.art);
+ const saved=await page.evaluate(()=>JSON.parse(backupText()));assert.equal(saved.deviceStorage.art,full.deviceStorage.art);
+});
+
+test('invalid full backups and failed artwork writes leave existing saved progress and art intact',async(t)=>{
+ const art=JSON.stringify({v:1,slots:{banner:'https://example.test/original.png'}});
+ const page=await pageFor(t,{seed:{[liveKey]:JSON.stringify(fullSave()),[liveKey+'-art']:art,unrelated:'untouched'}});
+ const before=await page.evaluate(()=>({state:JSON.stringify(state),disk:Object.fromEntries(Object.entries(localStorage))}));
+ await page.evaluate(()=>restore(JSON.stringify({app:'gzw-companion',backupVersion:1,state:{counts:{steel:1}},deviceStorage:{art:null,seen:3,artFiles:null}})));
+ assert.equal(await page.locator('#modal-root .modal').count(),0);
+ assert.equal(await page.evaluate(()=>JSON.stringify(state)),before.state);
+ await page.evaluate(()=>{
+   const original=Storage.prototype.setItem;let failed=false;
+   Storage.prototype.setItem=function(key,value){if(!failed&&key===storageKey('-art')){failed=true;throw new DOMException('Storage full','QuotaExceededError');}return original.call(this,key,value);};
+   restore(JSON.stringify({app:'gzw-companion',backupVersion:1,state:{counts:{steel:1}},deviceStorage:{art:JSON.stringify({v:1,slots:{banner:'https://example.test/new.png'}}),seen:'0.1.7',artFiles:null}}));
+ });
+ await page.locator('[data-act="modal-ok"]').click();
+ assert.equal(await page.evaluate(()=>JSON.stringify(state)),before.state);
+ const after=await page.evaluate(()=>Object.fromEntries(Object.entries(localStorage)));
+ assert.deepEqual(after,before.disk);
+ assert.match(await page.locator('#toast-root').innerText(),/could not save the restore/i);
+});

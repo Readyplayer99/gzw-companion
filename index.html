@@ -36,6 +36,7 @@ h2, h3, h4 { margin: 0; }
 .home { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; padding: 16px; }
 .home-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 22px 10px; color: var(--text); text-decoration: none; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); font-weight: 600; }
 .home-card.soon { opacity: .55; }
+.backup-actions { grid-column:1 / -1; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
 .home-card small { color: var(--muted); font-weight: 400; }
 .home-icon { font-size: 34px; }
 .footnote { grid-column: 1 / -1; color: var(--muted); font-size: 12px; text-align: center; margin: 16px 0 0; }
@@ -1595,14 +1596,59 @@ function loadState() {
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); storageOK = true; } catch (e) { storageOK = false; }
 }
+function deviceBackupData() {
+  try {
+    return { art: localStorage.getItem(storageKey("-art")), seen: localStorage.getItem(storageKey("-seen")), artFiles: localStorage.getItem(storageKey("-art-files")) };
+  } catch (e) {
+    // A blocked browser store must not prevent exporting progress in memory.
+    return { art: window.GZW_ART_STATE ? JSON.stringify({ v: 1, slots: window.GZW_ART_STATE.art }) : null, seen: null, artFiles: null };
+  }
+}
 function backupText() {
-  return JSON.stringify({ app: "gzw-companion", appVersion: APP_VERSION, exported: new Date().toISOString(), state }, null, 1);
+  return JSON.stringify({ app: "gzw-companion", appVersion: APP_VERSION, backupVersion: 1, exported: new Date().toISOString(), state, deviceStorage: deviceBackupData() }, null, 1);
 }
 function parseBackup(text) {
   const data = JSON.parse(text);
   const st = isObj(data) && isObj(data.state) ? data.state : data;
   if (!isObj(st) || (!st.counts && !st.stationLevels)) throw new Error("This doesn't look like a GZW Companion backup.");
   return normalize(st);
+}
+function parseBackupBundle(text) {
+  const raw = JSON.parse(text), next = parseBackup(text);
+  let deviceStorage = null;
+  if (isObj(raw) && Object.prototype.hasOwnProperty.call(raw, "deviceStorage")) {
+    if (raw.app !== "gzw-companion" || raw.backupVersion !== 1 || !isObj(raw.deviceStorage)) throw Error("Unsupported full-app backup format.");
+    deviceStorage = {};
+    for (const field of ["art", "seen", "artFiles"]) {
+      const value = raw.deviceStorage[field];
+      if (value !== null && typeof value !== "string") throw Error("The full backup is missing valid " + field + " data.");
+      deviceStorage[field] = value;
+    }
+  }
+  return { state: next, deviceStorage };
+}
+function applyBackupBundle(bundle) {
+  const pairs = [[STORAGE_KEY, JSON.stringify(bundle.state)]];
+  if (bundle.deviceStorage) for (const [field, suffix] of [["art", "-art"], ["seen", "-seen"], ["artFiles", "-art-files"]]) pairs.push([storageKey(suffix), bundle.deviceStorage[field]]);
+  const previous = pairs.map(([key]) => [key, localStorage.getItem(key)]);
+  try {
+    // Free only this app's replaced values before writing potentially large art.
+    for (const [key] of pairs) localStorage.removeItem(key);
+    for (const [key, value] of pairs) if (value !== null) localStorage.setItem(key, value);
+  } catch (e) {
+    try {
+      for (const [key] of pairs) localStorage.removeItem(key);
+      for (const [key, value] of previous) if (value !== null) localStorage.setItem(key, value);
+    } catch (rollbackError) { /* Existing data remains available in memory. */ }
+    storageOK = false;
+    throw Error("The browser could not save the restore. Your current progress is still open; download a backup before closing it.");
+  }
+  state = bundle.state; storageOK = true;
+  if (bundle.deviceStorage) {
+    if (window.GZW_ART_STATE) window.GZW_ART_STATE.reload();
+    if (window.GZW_LAUNCH && window.GZW_LAUNCH.reloadCache) window.GZW_LAUNCH.reloadCache();
+  }
+  render();
 }
 
 let state = loadState();
@@ -1801,6 +1847,7 @@ const comingSoon = (name) => `<div class="coming-soon"><div class="home-icon">�
 function renderHome() {
   return `<main class="home">${MAIN_TABS.map((t) => `<a class="home-card ${t.ready ? "" : "soon"}" href="${t.href || "#/" + t.id}">
     <span class="home-icon">${t.icon}</span><span>${t.label}</span>${t.ready ? "" : "<small>Coming soon</small>"}</a>`).join("")}
+    <div class="backup-actions"><button class="btn primary" data-act="export">💾 Back up everything</button><button class="btn" data-act="import">📥 Restore backup</button></div>
     <p class="footnote">${esc(DATA_SOURCE)}</p></main>`;
 }
 function readyJobs() { const now = Date.now(); return state.jobs.filter((j) => j.end <= now).length; }
@@ -1899,7 +1946,7 @@ function renderInventory() {
 }
 function backupMenu() {
   return `<div class="menu">
-    <button class="btn" data-act="export">⬇️ Download backup</button>
+    <button class="btn" data-act="export">💾 Back up everything</button>
     <button class="btn" data-act="import">⬆️ Restore from file</button>
     <button class="btn" data-act="copy-backup">📋 Copy backup text</button>
     <button class="btn" data-act="paste-backup">📥 Paste backup text</button>
@@ -2282,22 +2329,33 @@ function downloadBackup() {
     const blob = new Blob([backupText()], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "gzw-companion-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.download = "gzw-companion-full-backup-" + new Date().toISOString().slice(0, 10) + ".json";
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    showToast("Backup downloaded. If nothing happened, use Copy backup text.");
+    showToast("Full backup downloaded: progress, settings and artwork. If nothing happened, use Copy backup text.");
   } catch (e) { ACTIONS["copy-backup"](); }
 }
 function restore(text) {
-  let s;
-  try { s = parseBackup(text); } catch (e) { showToast("⚠️ Couldn't read that backup: " + e.message); return; }
-  confirmBox("Restore backup?", "This replaces everything currently saved in the app.", "Restore", () => {
-    const snap = snapshot(); state = s; commit(); showToast("Backup restored", snap, "restore");
+  let bundle;
+  try { bundle = parseBackupBundle(text); } catch (e) { showToast("⚠️ Couldn't read that backup: " + e.message); return; }
+  const full = !!bundle.deviceStorage;
+  confirmBox(full ? "Restore full backup?" : "Restore tracker backup?", full ? "This replaces your tracker progress, settings and saved artwork with this backup." : "This restores tracker progress and settings. Your saved artwork is kept because this older backup does not include it.", "Restore", () => {
+    const snap = full ? JSON.stringify({ fullAppUndo: true, state, deviceStorage: deviceBackupData() }) : snapshot();
+    try { applyBackupBundle(bundle); showToast(full ? "Full backup restored" : "Tracker backup restored; artwork kept", snap, "restore"); }
+    catch (e) { showToast("⚠️ " + e.message); }
   }, true);
 }
 
 const ACTIONS = {
-  undo() { if (!toast.snap) return; state = normalize(JSON.parse(toast.snap)); hideToast(); commit(); showToast("Undone"); },
+  undo() {
+    if (!toast.snap) return;
+    const previous = JSON.parse(toast.snap); hideToast();
+    try {
+      if (previous.fullAppUndo) applyBackupBundle({ state: normalize(previous.state), deviceStorage: previous.deviceStorage });
+      else { state = normalize(previous); commit(); }
+      showToast("Undone");
+    } catch (e) { showToast("⚠️ " + e.message); }
+  },
   backdrop(el, e) { if (e.target === el) closeModal(); },
   "modal-close": closeModal,
   "modal-ok"() { const fn = modalOk; closeModal(); if (fn) fn(); },
@@ -2328,7 +2386,7 @@ const ACTIONS = {
   export: downloadBackup,
   import() { const f = document.getElementById("import-file"); f.value = ""; f.click(); },
   "copy-backup"() {
-    openModal(`<div class="modal-body"><h3>Backup text</h3><p class="muted-s">Copy all of this and keep it somewhere safe (notes app, email to yourself).</p>
+    openModal(`<div class="modal-body"><h3>Backup text</h3><p class="muted-s">This full backup includes progress, settings, custom recipes and saved artwork. Copy all of it and keep it somewhere safe.</p>
       <textarea id="backup-text" rows="8" readonly>${esc(backupText())}</textarea>
       <div class="modal-buttons"><button class="btn primary" data-act="copy-now">📋 Copy</button><button class="btn" data-act="modal-close">Close</button></div></div>`);
   },
@@ -3451,7 +3509,7 @@ function renderArt() {
     <p class="muted-s">Your own AI art is fine. Don't use real game screenshots or the official GZW logo – those belong to MADFINGER.</p></div>
   <div class="card"><div class="summary-row"><span>${used} / ${ART_SLOTS.length} pictures · about ${kb} KB used</span>
     <span class="inline" style="margin:0"><button class="btn" data-act="art-export" ${used ? "" : "disabled"}>⬇️ Art backup</button><button class="btn" data-act="art-import">⬆️ Restore</button></span></div>
-    <p class="muted-s">Art is saved separately from your inventory backup, so make an art backup too.</p></div>`;
+    <p class="muted-s">Use <b>Back up everything</b> on Home or in Inventory → ⋯ to save artwork and tracker progress together. The Art backup button here saves artwork only.</p></div>`;
   let group = "";
   for (const s of ART_SLOTS) {
     if (s.group !== group) { group = s.group; h += `<div class="section-title">${esc(group)}</div>`; }
@@ -3599,6 +3657,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .art-url { min-width: 0; font-size: 14px; padding: 8px 10px; }
 </style>`);
 
+window.GZW_ART_STATE = { get art() { return art; }, reload() { art = loadArt(); lastBg = null; lastIcon = null; } };
 render();
 })();
 </script>
@@ -3617,7 +3676,7 @@ const FEEDBACK_URL = "";
 const SEEN_KEY = storageKey("-seen");
 const DISCLAIMER = "Unofficial community-made tool. Not affiliated with or endorsed by MADFINGER Games.";
 const CHANGES = [
-  ["0.1.7", ["22 documented crafts and 15 updated disassembly recipes", "All 111 existing item images plus 24 new item images", "Multiple capability requirements, second-based crafts and preserved saved progress"]],
+  ["0.1.7", ["Full-app backup and restore, including saved artwork", "22 documented crafts and 15 updated disassembly recipes", "All 111 existing item images plus 24 new item images", "Multiple capability requirements, second-based crafts and preserved saved progress"]],
   ["0.1.6", ["Built-in artwork that everyone sees", "💬 Feedback button (top right)", "About and What's new screens"]],
   ["0.1.5", ["🎨 Art & look: add your own pictures"]],
   ["0.1.4", ["🔩 Disassembly tab with a queue and timers that run while you're offline"]],
@@ -3794,7 +3853,7 @@ const REPO_URL = "https://github.com/Readyplayer99/gzw-companion";
 const ABOUT = "Free GZW hideout tracker. Track materials, station upgrades, crafting and disassembly timers, and pin goals for a shopping list. Coming soon: player stats, weapon builder and loot prices. I made it because I kept losing track of what my hideout needed.";
 const DISCLAIMER = "Unofficial community-made tool. Not affiliated with or endorsed by MADFINGER Games.";
 const CHANGELOG = [
-  { v: "0.1.7", items: ["22 documented crafting and production recipes", "15 disassembly recipes with individual community-estimated timings", "135 item images, including the original 111", "Multiple requirements and second-based craft timers; existing saves and custom corrections kept"] },
+  { v: "0.1.7", items: ["Back up everything from Home: progress, settings, custom recipes and saved artwork", "22 documented crafting and production recipes", "15 disassembly recipes with individual community-estimated timings", "135 item images, including the original 111", "Multiple requirements and second-based craft timers; existing saves and custom corrections kept"] },
   { v: "0.1.6", items: ["Built-in art: everyone now sees the pictures", "💬 Feedback, ℹ️ About and 📰 What's new on the home screen", "Fan-made disclaimer"] },
   { v: "0.1.5", items: ["🎨 Art & look: add your own pictures (they replace the built-in ones on your device)"] },
   { v: "0.1.4", items: ["🔩 Disassembly tab: queue, timers that keep running while you're away, Collect"] },
@@ -3839,7 +3898,7 @@ function want(id) {
   }
   return cache[id] || null;
 }
-const userArt = () => (window.GZW_ART && window.GZW_ART.art) || {};
+const userArt = () => (window.GZW_ART_STATE && window.GZW_ART_STATE.art) || (window.GZW_ART && window.GZW_ART.art) || {};
 const bgStyle = (u, top, bottom) => `background-image:linear-gradient(to top, rgba(20,23,15,${bottom}), rgba(20,23,15,${top})), url('${u}')`;
 function setLink(rel, href) {
   let l = document.querySelector(`link[rel="${rel}"]`);
@@ -3998,7 +4057,12 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .page-hero { height: 120px; border-radius: var(--radius); border: 1px solid var(--border); background-size: cover; background-position: center; margin-bottom: 10px; display: flex; align-items: flex-end; padding: 10px 12px; font-weight: 800; font-size: 18px; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 2px 6px #000; }
 </style>`);
 
-window.GZW_LAUNCH = { want, cmpV, found, get needRender() { return needRender; }, decorate };
+window.GZW_LAUNCH = { want, cmpV, found, get needRender() { return needRender; }, decorate,
+  reloadCache() {
+    try { cache = JSON.parse(localStorage.getItem(FILES_KEY) || "{}") || {}; } catch (e) { cache = {}; }
+    for (const key of Object.keys(found)) delete found[key];
+  }
+};
 render();
 setTimeout(maybePopup, 400);
 })();

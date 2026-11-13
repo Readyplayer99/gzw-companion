@@ -1,5 +1,5 @@
 diff --git a/index.html b/index.html
-index 0d3f4f9..9575b52 100644
+index 0d3f4f9..a3a82e3 100644
 --- a/index.html
 +++ b/index.html
 @@ -26,6 +26,9 @@ h2, h3, h4 { margin: 0; }
@@ -12,7 +12,15 @@ index 0d3f4f9..9575b52 100644
  .subtabs { display: flex; overflow-x: auto; background: var(--panel); border-bottom: 1px solid var(--border); }
  .subtabs a { flex: 1; white-space: nowrap; padding: 11px 12px; text-align: center; text-decoration: none; color: var(--muted); border-bottom: 3px solid transparent; }
  .subtabs a.active { color: var(--text); border-bottom-color: var(--accent); }
-@@ -182,16 +185,21 @@ details.card summary { cursor: pointer; font-weight: 700; }
+@@ -33,6 +36,7 @@ h2, h3, h4 { margin: 0; }
+ .home { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; padding: 16px; }
+ .home-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 22px 10px; color: var(--text); text-decoration: none; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); font-weight: 600; }
+ .home-card.soon { opacity: .55; }
++.backup-actions { grid-column:1 / -1; display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+ .home-card small { color: var(--muted); font-weight: 400; }
+ .home-icon { font-size: 34px; }
+ .footnote { grid-column: 1 / -1; color: var(--muted); font-size: 12px; text-align: center; margin: 16px 0 0; }
+@@ -182,16 +186,21 @@ details.card summary { cursor: pointer; font-weight: 700; }
  // =============================================================
  // GAME DATA – edit this part when a game patch changes things
  // =============================================================
@@ -39,7 +47,7 @@ index 0d3f4f9..9575b52 100644
  const ITEM_IMAGE_URLS = Object.freeze({
    "analog-indicator": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_AnalogIndicator.webp",
    "burner-head": "https://gzw-data.dev/assets/items/hideout_materials/IS_Misc_BurnerHead.webp",
-@@ -303,7 +311,31 @@ const ITEM_IMAGE_URLS = Object.freeze({
+@@ -303,7 +312,31 @@ const ITEM_IMAGE_URLS = Object.freeze({
    "plutonium-canister": "https://gzw-data.dev/assets/items/misc/IS_Misc_PlutoniumCanister.webp",
    "sarin-canister": "https://static.wikia.nocookie.net/gray-zone-warfare/images/b/be/Sarin_Canister_icon.png/revision/latest?cb=20261104175604",
    "unlra-relief-manifest": "https://static.wikia.nocookie.net/gray-zone-warfare/images/e/e2/UNLRA_Relief_Manifest_icon.png/revision/latest?cb=20261102054526",
@@ -72,7 +80,7 @@ index 0d3f4f9..9575b52 100644
  });
  const itemImage = (id, fallback = "") => ITEM_IMAGE_URLS[id] || fallback;
  
-@@ -367,6 +399,32 @@ const RAW_ITEMS = [
+@@ -367,6 +400,32 @@ const RAW_ITEMS = [
    ["EPO", "crafted", { info: "Stim · removed from vendors in 0.5" }],
    ["ORI-12", "crafted", { info: "Stim · removed from vendors in 0.5" }],
    ["HpR 3-S", "crafted", { info: "Stim · removed from vendors in 0.5" }],
@@ -105,7 +113,7 @@ index 0d3f4f9..9575b52 100644
  ];
  const BUILT_IN_ITEMS = RAW_ITEMS.map(([name, category, extra = {}]) => {
    const id = slug(name);
-@@ -402,7 +460,7 @@ const L = (name, req, o = {}) => ({ name, req, gives: o.gives || {}, needs: o.ne
+@@ -402,7 +461,7 @@ const L = (name, req, o = {}) => ({ name, req, gives: o.gives || {}, needs: o.ne
  const RAW_STATIONS = [
    ["generator", "Generator", "utility", [
      L("Two-Stroke Engine", { Steel: 1, "Mechanical Parts": 1, "Motor Oil": 1, Dynamo: 1 }, { produces: 9 }),
@@ -114,7 +122,7 @@ index 0d3f4f9..9575b52 100644
    ]],
    ["heat-source", "Heat Source", "laboratory", [
      L("Open Fire Pit", { Steel: 3, "Construction Material": 2, Wood: 1 }, { gives: { heat: 1 } }),
-@@ -423,7 +481,7 @@ const RAW_STATIONS = [
+@@ -423,7 +482,7 @@ const RAW_STATIONS = [
      L("Metal Sieve", { "Fine Metal Mesh": 3, Steel: 3 }, { gives: { filtration: 1 } }),
    ]],
    ["analysis", "Analysis", "laboratory", [
@@ -123,7 +131,7 @@ index 0d3f4f9..9575b52 100644
      L("Spectrometer", { "Electrical Parts": 4, "Circuit Board": 3, Plastics: 2, "Mechanical Parts": 2, "Crystal Prism": 1, "Vapor Lamp": 1, "US Dollars": 35000 }, { gives: { analysis: 2 }, needs: { analysis: 5 }, power: 1 }),
    ]],
    ["glassware", "Glassware", "laboratory", [
-@@ -436,12 +494,12 @@ const RAW_STATIONS = [
+@@ -436,12 +495,12 @@ const RAW_STATIONS = [
      L("Laboratory Fridge", { Steel: 6, Glass: 5, "Circuit Board": 2, "Electrical Parts": 2, "Plumbing Parts": 2, Refrigerant: 2, "US Dollars": 45000 }, { gives: { storage: 2 }, power: 1 }),
    ]],
    ["ventilation", "Ventilation", "laboratory", [
@@ -139,7 +147,7 @@ index 0d3f4f9..9575b52 100644
      L("Dedicated Server Rack", { "Electrical Parts": 5, RAM: 4, Motherboard: 1, "Power Supply": 1, "Server CPU": 1, "US Dollars": 45000 }, { gives: { compute: 2 }, power: 1 }),
    ]],
    ["software", "Software", "workshop", [
-@@ -451,11 +509,11 @@ const RAW_STATIONS = [
+@@ -451,11 +510,11 @@ const RAW_STATIONS = [
    ["micro-electronics", "Micro Electronics", "workshop", [
      L("Basic Electronics Bench", { "Soldering Iron": 1, Multimeter: 1, "Tool Set": 1, "Power Supply": 1, Wood: 1 }, { gives: { electronics: 1 } }),
      L("Advanced Technical Workbench", { "Electrical Parts": 4, "Soldering Iron": 2, Multimeter: 1, Oscilloscope: 1, "Power Supply": 1 }, { gives: { electronics: 2 }, power: 2 }),
@@ -153,7 +161,7 @@ index 0d3f4f9..9575b52 100644
    ]],
    ["rf-sensors", "RF Sensors", "workshop", [
      L("Signal Diagnostics Bench", { "Electrical Parts": 1, "Signal Generator": 1, "Soldering Iron": 1, Steel: 1, Wood: 1 }, { gives: { rf: 1 }, power: 1 }),
-@@ -464,7 +522,7 @@ const RAW_STATIONS = [
+@@ -464,7 +523,7 @@ const RAW_STATIONS = [
    ["workshop-storage", "Storage (Workshop)", "workshop", [
      L("Salvaged Wooden Crate", { Wood: 1, "Mechanical Parts": 1 }, { gives: { storage: 1 } }),
      L("Heavy-Duty Steel Locker", { Steel: 9, "Mechanical Parts": 3 }, { gives: { storage: 3 } }),
@@ -162,7 +170,7 @@ index 0d3f4f9..9575b52 100644
    ]],
  ];
  const STATIONS = RAW_STATIONS.map(([id, name, room, levels]) => ({
-@@ -485,25 +543,889 @@ const TOTAL_LEVELS = STATIONS.reduce((n, s) => n + s.levels.length, 0);
+@@ -485,25 +544,889 @@ const TOTAL_LEVELS = STATIONS.reduce((n, s) => n + s.levels.length, 0);
  // station: [ stationId, level ] or null (unknown) · cap: [ capId, min ] or null
  // time: minutes (0 = unknown, crafts instantly in the app) · power: kW
  const RAW_RECIPES = [
@@ -1071,7 +1079,7 @@ index 0d3f4f9..9575b52 100644
  ];
  function buildRecipe(r) {
    const chk = (n) => { if (!BUILT_IN_BY_ID[slug(n)]) console.warn("Unknown item in recipe " + r.name + ": " + n); return slug(n); };
-@@ -514,6 +1436,7 @@ function buildRecipe(r) {
+@@ -514,6 +1437,7 @@ function buildRecipe(r) {
      station: r.station ? { id: r.station[0], level: r.station[1] } : null,
      stationGuess: !!r.stationGuess,
      cap: r.cap ? { id: r.cap[0], min: r.cap[1] } : null,
@@ -1079,7 +1087,7 @@ index 0d3f4f9..9575b52 100644
      needsRecipe: !!r.needsRecipe, task: r.task || "", power: r.power || 0, time: r.time || 0,
      notes: r.notes || "", source: r.source || "",
    };
-@@ -537,12 +1460,13 @@ function fmtDur(ms) {
+@@ -537,12 +1461,13 @@ function fmtDur(ms) {
    return h ? h + "h " + m + "m" : m ? m + "m " + sec + "s" : sec + "s";
  }
  function fmtMinutes(min) {
@@ -1097,7 +1105,7 @@ index 0d3f4f9..9575b52 100644
  function lev(a, b) {
    const d = Array.from({ length: b.length + 1 }, (_, i) => i);
    for (let i = 1; i <= a.length; i++) {
-@@ -595,6 +1519,12 @@ function cleanItem(i) {
+@@ -595,6 +1520,12 @@ function cleanItem(i) {
    return { id: String(i.id), name: String(i.name).slice(0, 60), category: CATEGORIES.some((c) => c.id === i.category) ? i.category : "other",
      image: String(i.image || ""), info: String(i.info || "").slice(0, 300), step: Math.max(1, int(i.step) || 1), custom: true };
  }
@@ -1110,7 +1118,7 @@ index 0d3f4f9..9575b52 100644
  function cleanRecipe(r) {
    if (!isObj(r) || !r.id || !r.name) return null;
    const st = isObj(r.station) && STATION_BY_ID[r.station.id] ? STATION_BY_ID[r.station.id] : null;
-@@ -607,16 +1537,21 @@ function cleanRecipe(r) {
+@@ -607,16 +1538,21 @@ function cleanRecipe(r) {
      stationGuess: !!r.stationGuess,
      cap: isObj(r.cap) && CAP_BY_ID[r.cap.id] ? { id: r.cap.id, min: Math.max(1, int(r.cap.min) || 1) } : null,
      needsRecipe: !!r.needsRecipe, task: String(r.task || "").slice(0, 120),
@@ -1135,7 +1143,7 @@ index 0d3f4f9..9575b52 100644
    const valid = new Set(ids);
    for (const [k, v] of Object.entries(isObj(r.counts) ? r.counts : {})) { const n = Math.max(0, int(v)); if (n && valid.has(k)) s.counts[k] = n; }
    s.favorites = [...new Set(arr(r.favorites).filter((id) => valid.has(id)))];
-@@ -626,7 +1561,7 @@ function normalize(raw) {
+@@ -626,7 +1562,7 @@ function normalize(raw) {
    const lv = isObj(r.stationLevels) ? r.stationLevels : {};
    for (const st of STATIONS) { const n = clamp(int(lv[st.id]), 0, st.levels.length); if (n) s.stationLevels[st.id] = n; }
    s.pins = [...new Set(arr(r.pins || r.pinned || r.pinnedStations).filter((id) => STATION_BY_ID[id]))];
@@ -1144,7 +1152,68 @@ index 0d3f4f9..9575b52 100644
    for (const [id, rec] of Object.entries(isObj(r.recipeOverrides) ? r.recipeOverrides : {})) {
      if (!BUILT_IN_RECIPE_BY_ID[id]) continue;
      const c = cleanRecipe({ ...rec, id }); if (c) s.recipeOverrides[id] = c;
-@@ -675,16 +1610,16 @@ let state = loadState();
+@@ -660,8 +1596,16 @@ function loadState() {
+ function saveState() {
+   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); storageOK = true; } catch (e) { storageOK = false; }
+ }
++function deviceBackupData() {
++  try {
++    return { art: localStorage.getItem(storageKey("-art")), seen: localStorage.getItem(storageKey("-seen")), artFiles: localStorage.getItem(storageKey("-art-files")) };
++  } catch (e) {
++    // A blocked browser store must not prevent exporting progress in memory.
++    return { art: window.GZW_ART_STATE ? JSON.stringify({ v: 1, slots: window.GZW_ART_STATE.art }) : null, seen: null, artFiles: null };
++  }
++}
+ function backupText() {
+-  return JSON.stringify({ app: "gzw-companion", appVersion: APP_VERSION, exported: new Date().toISOString(), state }, null, 1);
++  return JSON.stringify({ app: "gzw-companion", appVersion: APP_VERSION, backupVersion: 1, exported: new Date().toISOString(), state, deviceStorage: deviceBackupData() }, null, 1);
+ }
+ function parseBackup(text) {
+   const data = JSON.parse(text);
+@@ -669,22 +1613,59 @@ function parseBackup(text) {
+   if (!isObj(st) || (!st.counts && !st.stationLevels)) throw new Error("This doesn't look like a GZW Companion backup.");
+   return normalize(st);
+ }
++function parseBackupBundle(text) {
++  const raw = JSON.parse(text), next = parseBackup(text);
++  let deviceStorage = null;
++  if (isObj(raw) && Object.prototype.hasOwnProperty.call(raw, "deviceStorage")) {
++    if (raw.app !== "gzw-companion" || raw.backupVersion !== 1 || !isObj(raw.deviceStorage)) throw Error("Unsupported full-app backup format.");
++    deviceStorage = {};
++    for (const field of ["art", "seen", "artFiles"]) {
++      const value = raw.deviceStorage[field];
++      if (value !== null && typeof value !== "string") throw Error("The full backup is missing valid " + field + " data.");
++      deviceStorage[field] = value;
++    }
++  }
++  return { state: next, deviceStorage };
++}
++function applyBackupBundle(bundle) {
++  const pairs = [[STORAGE_KEY, JSON.stringify(bundle.state)]];
++  if (bundle.deviceStorage) for (const [field, suffix] of [["art", "-art"], ["seen", "-seen"], ["artFiles", "-art-files"]]) pairs.push([storageKey(suffix), bundle.deviceStorage[field]]);
++  const previous = pairs.map(([key]) => [key, localStorage.getItem(key)]);
++  try {
++    // Free only this app's replaced values before writing potentially large art.
++    for (const [key] of pairs) localStorage.removeItem(key);
++    for (const [key, value] of pairs) if (value !== null) localStorage.setItem(key, value);
++  } catch (e) {
++    try {
++      for (const [key] of pairs) localStorage.removeItem(key);
++      for (const [key, value] of previous) if (value !== null) localStorage.setItem(key, value);
++    } catch (rollbackError) { /* Existing data remains available in memory. */ }
++    storageOK = false;
++    throw Error("The browser could not save the restore. Your current progress is still open; download a backup before closing it.");
++  }
++  state = bundle.state; storageOK = true;
++  if (bundle.deviceStorage) {
++    if (window.GZW_ART_STATE) window.GZW_ART_STATE.reload();
++    if (window.GZW_LAUNCH && window.GZW_LAUNCH.reloadCache) window.GZW_LAUNCH.reloadCache();
++  }
++  render();
++}
+ 
+ let state = loadState();
+ 
  // =============================================================
  // GAME LOGIC
  // =============================================================
@@ -1164,7 +1233,7 @@ index 0d3f4f9..9575b52 100644
      ? { ...state.recipeOverrides[r.id], builtIn: true, edited: true }
      : { ...r, builtIn: true, edited: false });
    for (const r of state.customRecipes) out.push({ ...r, custom: true });
-@@ -754,7 +1689,7 @@ function unlocksOf(st) {
+@@ -754,7 +1735,7 @@ function unlocksOf(st) {
  }
  function recipeHardOk(r, levels, caps) {
    const stOk = !r.station || (levels[r.station.id] || 0) >= r.station.level;
@@ -1173,7 +1242,7 @@ index 0d3f4f9..9575b52 100644
    return stOk && capOk;
  }
  
-@@ -762,7 +1697,7 @@ function recipeInfo(r, n = 1) {
+@@ -762,7 +1743,7 @@ function recipeInfo(r, n = 1) {
    const caps = capabilities(), pw = power(), flags = state.recipeFlags[r.id] || {};
    const stCur = r.station ? lvl(r.station.id) : 0;
    const stationOk = !r.station || stCur >= r.station.level;
@@ -1182,7 +1251,7 @@ index 0d3f4f9..9575b52 100644
    const foundOk = !r.needsRecipe || !!flags.found;
    const taskOk = !r.task || !!flags.task;
    const missing = r.ingredients.filter((x) => have(x.item) < x.qty * n);
-@@ -770,7 +1705,7 @@ function recipeInfo(r, n = 1) {
+@@ -770,7 +1751,7 @@ function recipeInfo(r, n = 1) {
    const powerOver = r.power > 0 && r.power > spare;
    const incomplete = !r.ingredients.length || !r.output;
    const status = incomplete ? "incomplete" : !stationOk || !capOk ? "locked" : !foundOk || !taskOk ? "needs" : missing.length ? "missing" : "craftable";
@@ -1191,7 +1260,24 @@ index 0d3f4f9..9575b52 100644
  }
  
  // How many of each item you still need.
-@@ -1111,13 +2046,13 @@ function recipeVisible() {
+@@ -866,6 +1847,7 @@ const comingSoon = (name) => `<div class="coming-soon"><div class="home-icon">
+ function renderHome() {
+   return `<main class="home">${MAIN_TABS.map((t) => `<a class="home-card ${t.ready ? "" : "soon"}" href="${t.href || "#/" + t.id}">
+     <span class="home-icon">${t.icon}</span><span>${t.label}</span>${t.ready ? "" : "<small>Coming soon</small>"}</a>`).join("")}
++    <div class="backup-actions"><button class="btn primary" data-act="export">💾 Back up everything</button><button class="btn" data-act="import">📥 Restore backup</button></div>
+     <p class="footnote">${esc(DATA_SOURCE)}</p></main>`;
+ }
+ function readyJobs() { const now = Date.now(); return state.jobs.filter((j) => j.end <= now).length; }
+@@ -964,7 +1946,7 @@ function renderInventory() {
+ }
+ function backupMenu() {
+   return `<div class="menu">
+-    <button class="btn" data-act="export">⬇️ Download backup</button>
++    <button class="btn" data-act="export">💾 Back up everything</button>
+     <button class="btn" data-act="import">⬆️ Restore from file</button>
+     <button class="btn" data-act="copy-backup">📋 Copy backup text</button>
+     <button class="btn" data-act="paste-backup">📥 Paste backup text</button>
+@@ -1111,13 +2093,13 @@ function recipeVisible() {
  function recipeCard(r, i) {
    const blockers = [];
    if (r.station && !i.stationOk) blockers.push(`❌ ${esc(STATION_BY_ID[r.station.id].name)} L${r.station.level}`);
@@ -1207,7 +1293,7 @@ index 0d3f4f9..9575b52 100644
      <div class="sc-sub">${r.ingredients.length ? `Ingredients: ${haveN} / ${r.ingredients.length} ready` : "Ingredients unknown – tap Edit to add"}</div>
      ${blockers.length ? `<div class="sc-sub">${blockers.join(" · ")}</div>` : ""}</a>`;
  }
-@@ -1129,7 +2064,7 @@ function renderCraftList() {
+@@ -1129,7 +2111,7 @@ function renderCraftList() {
  function renderCrafting() {
    const p = state.prefs, all = allRecipes().map((r) => recipeInfo(r));
    const counts = (s) => all.filter((i) => i.status === s).length;
@@ -1216,7 +1302,7 @@ index 0d3f4f9..9575b52 100644
    ${jobsCard()}
    <div class="toolbar">
      <div class="toolbar-row"><input class="search" id="craft-search" data-input="craft-search" type="search" placeholder="🔍 Search recipes..." value="${esc(ui.craftQuery)}">
-@@ -1153,12 +2088,12 @@ function renderRecipe(id) {
+@@ -1153,12 +2135,12 @@ function renderRecipe(id) {
        ${pinQ ? `<span class="stepper"><button class="btn" data-act="pin-qty" data-id="${esc(r.id)}" data-d="-1">−</button><b>×${pinQ}</b><button class="btn" data-act="pin-qty" data-id="${esc(r.id)}" data-d="1">+</button></span>` : ""}
      </div>
      <h3 style="margin-top:12px">Requirements</h3><ul class="req">
@@ -1232,7 +1318,7 @@ index 0d3f4f9..9575b52 100644
      </ul>`;
    if (!r.ingredients.length) {
      h += `<p class="hint">❔ Ingredients for this recipe haven't been published yet. Tap <b>Edit recipe</b> to add them when you see them in-game.</p>`;
-@@ -1175,7 +2110,7 @@ function renderRecipe(id) {
+@@ -1175,7 +2157,7 @@ function renderRecipe(id) {
    const blockedHard = i.incomplete || !i.stationOk || !i.capOk || i.missing.length > 0;
    h += `<div id="build-area"><button class="btn primary build-btn" data-act="craft" data-id="${esc(r.id)}" ${blockedHard ? "disabled" : ""}>🛠 Craft${n > 1 ? " ×" + n : ""}</button>
      ${i.incomplete ? `<p class="build-note">Add ingredients and an output with Edit recipe first.</p>` : ""}
@@ -1241,7 +1327,7 @@ index 0d3f4f9..9575b52 100644
      ${!i.incomplete && i.stationOk && i.capOk && i.missing.length ? `<p class="build-note">Missing: ${i.missing.map((x) => `${esc(itemName(x.item))} (${have(x.item)}/${x.qty * n})`).join(", ")}</p>` : ""}
      ${!blockedHard && (!i.foundOk || !i.taskOk) ? `<p class="build-note">📜 Not ticked: ${[!i.foundOk ? "recipe found" : "", !i.taskOk ? "task done" : ""].filter(Boolean).join(" and ")}. You can still craft.</p>` : ""}
    </div></div>`;
-@@ -1211,6 +2146,9 @@ function openItemForm(id) {
+@@ -1211,6 +2193,9 @@ function openItemForm(id) {
      <p class="error" id="form-error"></p>
      <div class="modal-buttons"><button type="submit" class="btn primary">Save</button><button type="button" class="btn" data-act="modal-close">Cancel</button></div></form>`);
  }
@@ -1251,7 +1337,7 @@ index 0d3f4f9..9575b52 100644
  function openRecipeForm(id) {
    const r = id ? getRecipe(id) : null;
    const kind = !r ? "new" : r.custom ? "custom" : "builtin";
-@@ -1229,13 +2167,14 @@ function openRecipeForm(id) {
+@@ -1229,13 +2214,14 @@ function openRecipeForm(id) {
      <div class="two"><label>Station needed<select name="station"><option value="">None / unknown</option>${stOpts}</select></label>
        <label class="narrow">Level<input name="stationLevel" type="number" min="1" max="3" value="${v.station ? v.station.level : 1}"></label></div>
      <label class="check"><input type="checkbox" name="stationGuess" ${v.stationGuess ? "checked" : ""}> Station level is a guess</label>
@@ -1270,7 +1356,7 @@ index 0d3f4f9..9575b52 100644
      <label>Notes<textarea name="notes" rows="2">${esc(v.notes)}</textarea></label>
      <p class="error" id="form-error"></p>
      <div class="modal-buttons"><button type="submit" class="btn primary">Save</button><button type="button" class="btn" data-act="modal-close">Cancel</button></div></form>`);
-@@ -1265,7 +2204,7 @@ function render() {
+@@ -1265,7 +2251,7 @@ function render() {
      title = t ? t.label : "Not found"; back = "#/";
      body = `<main class="page">${comingSoon(title)}</main>`;
    }
@@ -1279,7 +1365,48 @@ index 0d3f4f9..9575b52 100644
  }
  function commit() { saveState(); render(); }
  const snapshot = () => JSON.stringify(state);
-@@ -1378,9 +2317,11 @@ const ACTIONS = {
+@@ -1343,22 +2329,33 @@ function downloadBackup() {
+     const blob = new Blob([backupText()], { type: "application/json" });
+     const a = document.createElement("a");
+     a.href = URL.createObjectURL(blob);
+-    a.download = "gzw-companion-backup-" + new Date().toISOString().slice(0, 10) + ".json";
++    a.download = "gzw-companion-full-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+     document.body.appendChild(a); a.click(); a.remove();
+     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+-    showToast("Backup downloaded. If nothing happened, use Copy backup text.");
++    showToast("Full backup downloaded: progress, settings and artwork. If nothing happened, use Copy backup text.");
+   } catch (e) { ACTIONS["copy-backup"](); }
+ }
+ function restore(text) {
+-  let s;
+-  try { s = parseBackup(text); } catch (e) { showToast("⚠️ Couldn't read that backup: " + e.message); return; }
+-  confirmBox("Restore backup?", "This replaces everything currently saved in the app.", "Restore", () => {
+-    const snap = snapshot(); state = s; commit(); showToast("Backup restored", snap, "restore");
++  let bundle;
++  try { bundle = parseBackupBundle(text); } catch (e) { showToast("⚠️ Couldn't read that backup: " + e.message); return; }
++  const full = !!bundle.deviceStorage;
++  confirmBox(full ? "Restore full backup?" : "Restore tracker backup?", full ? "This replaces your tracker progress, settings and saved artwork with this backup." : "This restores tracker progress and settings. Your saved artwork is kept because this older backup does not include it.", "Restore", () => {
++    const snap = full ? JSON.stringify({ fullAppUndo: true, state, deviceStorage: deviceBackupData() }) : snapshot();
++    try { applyBackupBundle(bundle); showToast(full ? "Full backup restored" : "Tracker backup restored; artwork kept", snap, "restore"); }
++    catch (e) { showToast("⚠️ " + e.message); }
+   }, true);
+ }
+ 
+ const ACTIONS = {
+-  undo() { if (!toast.snap) return; state = normalize(JSON.parse(toast.snap)); hideToast(); commit(); showToast("Undone"); },
++  undo() {
++    if (!toast.snap) return;
++    const previous = JSON.parse(toast.snap); hideToast();
++    try {
++      if (previous.fullAppUndo) applyBackupBundle({ state: normalize(previous.state), deviceStorage: previous.deviceStorage });
++      else { state = normalize(previous); commit(); }
++      showToast("Undone");
++    } catch (e) { showToast("⚠️ " + e.message); }
++  },
+   backdrop(el, e) { if (e.target === el) closeModal(); },
+   "modal-close": closeModal,
+   "modal-ok"() { const fn = modalOk; closeModal(); if (fn) fn(); },
+@@ -1378,16 +2375,18 @@ const ACTIONS = {
      confirmBox("Delete material?", `Delete <b>${esc(itemName(id))}</b>? Recipes that use it will show it as a deleted item.`, "Delete", () => {
        const snap = snapshot();
        state.customItems = state.customItems.filter((i) => i.id !== id);
@@ -1294,7 +1421,15 @@ index 0d3f4f9..9575b52 100644
        commit(); showToast("Material deleted", snap, "del");
      }, true);
    },
-@@ -1474,6 +2415,8 @@ const ACTIONS = {
+   export: downloadBackup,
+   import() { const f = document.getElementById("import-file"); f.value = ""; f.click(); },
+   "copy-backup"() {
+-    openModal(`<div class="modal-body"><h3>Backup text</h3><p class="muted-s">Copy all of this and keep it somewhere safe (notes app, email to yourself).</p>
++    openModal(`<div class="modal-body"><h3>Backup text</h3><p class="muted-s">This full backup includes progress, settings, custom recipes and saved artwork. Copy all of it and keep it somewhere safe.</p>
+       <textarea id="backup-text" rows="8" readonly>${esc(backupText())}</textarea>
+       <div class="modal-buttons"><button class="btn primary" data-act="copy-now">📋 Copy</button><button class="btn" data-act="modal-close">Close</button></div></div>`);
+   },
+@@ -1474,6 +2473,8 @@ const ACTIONS = {
        commit(); showToast("Craft cancelled, ingredients returned", snap, "cancel");
      }, true);
    },
@@ -1303,7 +1438,7 @@ index 0d3f4f9..9575b52 100644
    "add-recipe"() { openRecipeForm(null); },
    "edit-recipe"(el) { openRecipeForm(el.dataset.id); },
    "reset-recipe"(el) {
-@@ -1607,14 +2550,15 @@ document.addEventListener("submit", (e) => {
+@@ -1607,14 +2608,15 @@ document.addEventListener("submit", (e) => {
        seen.add(item); ings.push({ item, qty, unsure });
      });
      if (ings.some((x) => x.item === outItem)) return formError("A recipe can't use the item it makes.");
@@ -1322,7 +1457,7 @@ index 0d3f4f9..9575b52 100644
      });
      if (kindR === "builtin") state.recipeOverrides[id] = rec;
      else if (kindR === "custom") state.customRecipes = state.customRecipes.map((r) => (r.id === id ? rec : r));
-@@ -1677,14 +2621,14 @@ render();
+@@ -1677,14 +2679,14 @@ render();
  // =============================================================
  (() => {
  "use strict";
@@ -1339,7 +1474,7 @@ index 0d3f4f9..9575b52 100644
  const OUT_INFO = "From disassembly · likely a sell / smuggling item";
  const NEW_ITEMS = [
    ["Artillery Ballistic Calculator", "disassembly", IN_INFO], ["Baget-53-31 Onboard Computer", "disassembly", IN_INFO],
-@@ -1710,32 +2654,294 @@ for (const [name, category, info] of NEW_ITEMS) {
+@@ -1710,32 +2712,294 @@ for (const [name, category, info] of NEW_ITEMS) {
  }
  
  // ---------- Disassembly data (edit here after game patches) ----------
@@ -1659,7 +1794,7 @@ index 0d3f4f9..9575b52 100644
  const DIS_BY_ID = Object.fromEntries(DIS_BUILT_IN.map((r) => [r.id, r]));
  
  function cleanDis(r) {
-@@ -1745,6 +2951,7 @@ function cleanDis(r) {
+@@ -1745,6 +3009,7 @@ function cleanDis(r) {
      id: String(r.id), input: String(r.input),
      outputs: arr(r.outputs).filter((x) => isObj(x) && x.item).map((x) => ({ item: String(x.item), qty: Math.max(1, int(x.qty) || 1), unsure: !!x.unsure })),
      time: Math.max(1, Math.round(Number(r.time) || DIS_DEFAULT_MIN)),
@@ -1667,7 +1802,7 @@ index 0d3f4f9..9575b52 100644
      station: st ? { id: st.id, level: clamp(int(r.station.level) || 1, 1, st.levels.length) } : null,
      notes: String(r.notes || "").slice(0, 600), source: String(r.source || "").slice(0, 120),
    };
-@@ -1876,7 +3083,7 @@ function disCard(r) {
+@@ -1876,7 +3141,7 @@ function disCard(r) {
    const label = !stOk ? "🔒 Locked" : h > 0 ? `🟢 You have ${h}` : "⚪ None in inventory";
    return `<a class="card station-card ${cls}" href="#/hideout/dis/${encodeURIComponent(r.id)}">
      <div class="sc-top"><span class="sc-name">${esc(disName(r))}${disTags(r)}</span><span class="badge ${cls}">${label}</span></div>
@@ -1676,7 +1811,7 @@ index 0d3f4f9..9575b52 100644
      ${!stOk ? `<div class="sc-sub">❌ Needs ${esc(STATION_BY_ID[r.station.id].name)} L${r.station.level}</div>` : ""}
      ${useful.length ? `<div class="sc-sub">📌 Gives ${useful.map((o) => esc(itemName(o.item))).join(", ")} for your pinned goals</div>` : ""}
      ${stOk && h > 0 ? `<div class="inline"><button class="btn" data-act="dis-add" data-id="${esc(r.id)}" data-n="1">＋ Queue 1</button></div>` : ""}
-@@ -1888,7 +3095,7 @@ function renderDisList() {
+@@ -1888,7 +3153,7 @@ function renderDisList() {
  }
  function renderDisassembly() {
    const p = state.prefs;
@@ -1685,7 +1820,7 @@ index 0d3f4f9..9575b52 100644
    ${disQueueCard()}
    <div class="card"><div class="summary-row"><span>Items disassembled at the same time</span>
      <select data-change="dis-slots">${[1, 2, 3, 4, 5, 6].map((n) => `<option value="${n}" ${p.disSlots === n ? "selected" : ""}>${n}</option>`).join("")}</select></div>
-@@ -1908,7 +3115,7 @@ function renderDisRecipe(id) {
+@@ -1908,7 +3173,7 @@ function renderDisRecipe(id) {
    const can = stOk && h >= n && r.outputs.length > 0;
    return `<a class="crumb" href="#/hideout/disassembly">← Disassembly</a>
    <div class="card"><div class="sd-head"><div><h2>${esc(disName(r))}${disTags(r)}</h2>
@@ -1694,7 +1829,7 @@ index 0d3f4f9..9575b52 100644
      <ul class="req">
        ${st ? `<li>${ok(stOk)} <a href="#/hideout/station/${st.id}">${esc(st.name)}</a> Level ≥ ${r.station.level} (you: ${lvl(st.id)})</li>` : `<li>❔ Station requirement unknown</li>`}
        ${n > 1 ? `<li>⏱ ×${n} takes about ${fmtMinutes(r.time * Math.ceil(n / (state.prefs.disSlots || 1)))} in total</li>` : ""}
-@@ -1942,6 +3149,7 @@ function openDisForm(id) {
+@@ -1942,6 +3207,7 @@ function openDisForm(id) {
        <p class="muted-s">Output not in the list? Add it first in Inventory → ＋ Add.</p></div>
      <div class="two"><label>Time hours<input name="hours" type="number" min="0" value="${Math.floor(v.time / 60)}"></label>
        <label>minutes<input name="minutes" type="number" min="0" max="59" value="${v.time % 60}"></label></div>
@@ -1702,7 +1837,7 @@ index 0d3f4f9..9575b52 100644
      <div class="two"><label>Station needed<select name="station"><option value="">None / unknown</option>${stOpts}</select></label>
        <label class="narrow">Level<input name="stationLevel" type="number" min="1" max="3" value="${v.station ? v.station.level : 1}"></label></div>
      <label>Notes<textarea name="notes" rows="2">${esc(v.notes)}</textarea></label>
-@@ -2097,7 +3305,7 @@ document.addEventListener("submit", (e) => {
+@@ -2097,7 +3363,7 @@ document.addEventListener("submit", (e) => {
    const stId = g("station"), base = DIS_BY_ID[id];
    const rec = cleanDis({
      id, input, outputs: outs, time: int(g("hours")) * 60 + clamp(int(g("minutes")), 0, 59),
@@ -1711,7 +1846,7 @@ index 0d3f4f9..9575b52 100644
    });
    if (kind === "builtin") state.disOverrides[id] = rec;
    else if (kind === "custom") state.disCustom = state.disCustom.map((r) => (r.id === id ? rec : r));
-@@ -2132,7 +3340,7 @@ render();
+@@ -2132,7 +3398,7 @@ render();
  // =============================================================
  (() => {
  "use strict";
@@ -1720,7 +1855,16 @@ index 0d3f4f9..9575b52 100644
  const STYLE_END = "gritty realistic military art, muted olive green and khaki, foggy Southeast Asian jungle, film grain, moody lighting, no text, no logos";
  const S = (id, group, label, where, shape, aspect, max, prompt, extra = {}) => ({ id, group, label, where, shape, aspect, max, prompt, ...extra });
  const ART_SLOTS = [
-@@ -2313,7 +3521,7 @@ render = function () {
+@@ -2243,7 +3509,7 @@ function renderArt() {
+     <p class="muted-s">Your own AI art is fine. Don't use real game screenshots or the official GZW logo – those belong to MADFINGER.</p></div>
+   <div class="card"><div class="summary-row"><span>${used} / ${ART_SLOTS.length} pictures · about ${kb} KB used</span>
+     <span class="inline" style="margin:0"><button class="btn" data-act="art-export" ${used ? "" : "disabled"}>⬇️ Art backup</button><button class="btn" data-act="art-import">⬆️ Restore</button></span></div>
+-    <p class="muted-s">Art is saved separately from your inventory backup, so make an art backup too.</p></div>`;
++    <p class="muted-s">Use <b>Back up everything</b> on Home or in Inventory → ⋯ to save artwork and tracker progress together. The Art backup button here saves artwork only.</p></div>`;
+   let group = "";
+   for (const s of ART_SLOTS) {
+     if (s.group !== group) { group = s.group; h += `<div class="section-title">${esc(group)}</div>`; }
+@@ -2313,7 +3579,7 @@ render = function () {
      const h1 = document.querySelector("#app .topbar h1"); if (h1) h1.textContent = "Art & look";
      const page = document.querySelector("#app main.page"); if (page) page.innerHTML = renderArt();
    }
@@ -1729,7 +1873,15 @@ index 0d3f4f9..9575b52 100644
  };
  
  const artFile = document.createElement("input");
-@@ -2401,14 +3609,15 @@ render();
+@@ -2391,6 +3657,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
+ .art-url { min-width: 0; font-size: 14px; padding: 8px 10px; }
+ </style>`);
+ 
++window.GZW_ART_STATE = { get art() { return art; }, reload() { art = loadArt(); lastBg = null; lastIcon = null; } };
+ render();
+ })();
+ </script>
+@@ -2401,14 +3668,15 @@ render();
  // =============================================================
  (() => {
  "use strict";
@@ -1743,11 +1895,11 @@ index 0d3f4f9..9575b52 100644
 +const SEEN_KEY = storageKey("-seen");
  const DISCLAIMER = "Unofficial community-made tool. Not affiliated with or endorsed by MADFINGER Games.";
  const CHANGES = [
-+  ["0.1.7", ["22 documented crafts and 15 updated disassembly recipes", "All 111 existing item images plus 24 new item images", "Multiple capability requirements, second-based crafts and preserved saved progress"]],
++  ["0.1.7", ["Full-app backup and restore, including saved artwork", "22 documented crafts and 15 updated disassembly recipes", "All 111 existing item images plus 24 new item images", "Multiple capability requirements, second-based crafts and preserved saved progress"]],
    ["0.1.6", ["Built-in artwork that everyone sees", "💬 Feedback button (top right)", "About and What's new screens"]],
    ["0.1.5", ["🎨 Art & look: add your own pictures"]],
    ["0.1.4", ["🔩 Disassembly tab with a queue and timers that run while you're offline"]],
-@@ -2578,13 +3787,14 @@ loadDefaults();
+@@ -2578,13 +3846,14 @@ loadDefaults();
  (() => {
  "use strict";
  // ---------- Settings: change these if you need to ----------
@@ -1759,11 +1911,11 @@ index 0d3f4f9..9575b52 100644
  const ABOUT = "Free GZW hideout tracker. Track materials, station upgrades, crafting and disassembly timers, and pin goals for a shopping list. Coming soon: player stats, weapon builder and loot prices. I made it because I kept losing track of what my hideout needed.";
  const DISCLAIMER = "Unofficial community-made tool. Not affiliated with or endorsed by MADFINGER Games.";
  const CHANGELOG = [
-+  { v: "0.1.7", items: ["22 documented crafting and production recipes", "15 disassembly recipes with individual community-estimated timings", "135 item images, including the original 111", "Multiple requirements and second-based craft timers; existing saves and custom corrections kept"] },
++  { v: "0.1.7", items: ["Back up everything from Home: progress, settings, custom recipes and saved artwork", "22 documented crafting and production recipes", "15 disassembly recipes with individual community-estimated timings", "135 item images, including the original 111", "Multiple requirements and second-based craft timers; existing saves and custom corrections kept"] },
    { v: "0.1.6", items: ["Built-in art: everyone now sees the pictures", "💬 Feedback, ℹ️ About and 📰 What's new on the home screen", "Fan-made disclaimer"] },
    { v: "0.1.5", items: ["🎨 Art & look: add your own pictures (they replace the built-in ones on your device)"] },
    { v: "0.1.4", items: ["🔩 Disassembly tab: queue, timers that keep running while you're away, Collect"] },
-@@ -2594,8 +3804,8 @@ const CHANGELOG = [
+@@ -2594,8 +3863,8 @@ const CHANGELOG = [
  // ---------- Built-in art, loaded from the app's website ----------
  // Each picture is looked for as <slot name> + one of these endings, in this order.
  const EXTS = [".jpg", ".jpeg", ".webp", ".jpg.jpg", ".png.jpg", ".png", ".jpg.png", ".png.png"];
@@ -1774,3 +1926,26 @@ index 0d3f4f9..9575b52 100644
  let cache = {};
  try { cache = JSON.parse(localStorage.getItem(FILES_KEY) || "{}") || {}; } catch (e) { cache = {}; }
  const found = {}, pending = new Set();
+@@ -2629,7 +3898,7 @@ function want(id) {
+   }
+   return cache[id] || null;
+ }
+-const userArt = () => (window.GZW_ART && window.GZW_ART.art) || {};
++const userArt = () => (window.GZW_ART_STATE && window.GZW_ART_STATE.art) || (window.GZW_ART && window.GZW_ART.art) || {};
+ const bgStyle = (u, top, bottom) => `background-image:linear-gradient(to top, rgba(20,23,15,${bottom}), rgba(20,23,15,${top})), url('${u}')`;
+ function setLink(rel, href) {
+   let l = document.querySelector(`link[rel="${rel}"]`);
+@@ -2788,7 +4057,12 @@ document.head.insertAdjacentHTML("beforeend", `<style>
+ .page-hero { height: 120px; border-radius: var(--radius); border: 1px solid var(--border); background-size: cover; background-position: center; margin-bottom: 10px; display: flex; align-items: flex-end; padding: 10px 12px; font-weight: 800; font-size: 18px; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 2px 6px #000; }
+ </style>`);
+ 
+-window.GZW_LAUNCH = { want, cmpV, found, get needRender() { return needRender; }, decorate };
++window.GZW_LAUNCH = { want, cmpV, found, get needRender() { return needRender; }, decorate,
++  reloadCache() {
++    try { cache = JSON.parse(localStorage.getItem(FILES_KEY) || "{}") || {}; } catch (e) { cache = {}; }
++    for (const key of Object.keys(found)) delete found[key];
++  }
++};
+ render();
+ setTimeout(maybePopup, 400);
+ })();

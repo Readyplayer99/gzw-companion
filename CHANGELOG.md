@@ -2,6 +2,10 @@
 
 ## 0.1.7
 
+- Add **Back up everything** and **Restore backup** on Home. One JSON file now
+  includes tracker progress, custom data, settings, active jobs and saved artwork.
+  Full restores support Undo; older tracker-only backups keep existing artwork.
+
 - Keep all 111 item-image links from the preceding image integration and include
   images for the additional recipe items.
 - Expand crafting and production from 8 to 22 documented recipes: 6 Workshop

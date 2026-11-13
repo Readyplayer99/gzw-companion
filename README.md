@@ -38,6 +38,24 @@ includes the additional recipe items and their images, named unlock missions,
 capability requirements, and community-reported production/disassembly timers.
 See [CHANGELOG.md](CHANGELOG.md) for the data sources and remaining uncertainties.
 
+### Back up everything after installing 0.1.7
+
+On the Home screen, choose **💾 Back up everything**. The same button is in
+**Hideout → Inventory → ⋯**. It downloads one JSON file containing inventory,
+station levels, favorites, ordering, pins, custom items and recipes, recipe
+corrections, settings, active crafting/disassembly jobs, and your saved artwork.
+Uploaded artwork is included; artwork stored as an external URL remains a link.
+The application and built-in item image links remain part of `index.html`.
+
+Choose **📥 Restore backup** on Home to select that JSON file. Restoring requires
+confirmation, and **Undo** can restore the state from before the restore.
+Older inventory-only backups are accepted and keep your existing artwork.
+Keep the backup file somewhere safe outside the browser.
+
+Before installing this patch, the old live version's **Download backup** button
+saves tracker data only. If you have custom artwork there, also use
+**Art & look → Art backup** before replacing `index.html`.
+
 ### Apply the patch through GitHub
 
 1. Open your current tracker in the browser where you normally use it. In
